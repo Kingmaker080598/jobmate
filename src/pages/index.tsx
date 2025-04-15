@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Typography, Button as MuiButton } from '@mui/material';
-import { Rocket, FileText, Brain, ShieldCheck, Sparkles, Lightbulb, Clock, ClipboardCheck } from 'lucide-react';
+import { Rocket, FileText, Brain, ShieldCheck, Lightbulb, Clock, ClipboardCheck } from 'lucide-react';
 
 // Premium Luxurious Futuristic CSS (aligned with home.js)
 const futuristicStyles = `
