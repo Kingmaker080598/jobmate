@@ -177,7 +177,7 @@ export default function LandingPage() {
         >
           Why Choose JobMate?
         </Typography>
-        <Typography className="futuristic-text max-w-2xl mx-auto mb-12 opacity-70">
+        <Typography className="futuristic-text max-w-2xl mx-auto mb-12 opacity-70 text-center">
           Elevate your career with AI that’s fast, precise, and designed for success. JobMate is your edge in the job market.
         </Typography>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
