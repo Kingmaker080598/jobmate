@@ -1,40 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# JobMate 🚀 — AI-Powered Career Companion
 
-## Getting Started
+**JobMate** is your all-in-one job application assistant powered by AI. Upload your resume, manage your application profile, and let JobMate help you tailor your resume and fill out job applications — faster and smarter.
 
-First, run the development server:
+![JobMate Banner](public/banner-jobmate.png) <!-- optional image/banner -->
+
+## 🔥 Features
+
+- ✨ **AI Resume Tailoring** (Coming Soon)
+- 📁 Upload and manage master resumes
+- 🗜️ **Auto-Fill Application Forms**
+- 🧠 Smart Suggestions (Coming Soon)
+- 🗜️ **Resume History**
+- 💼 Profile Management Dashboard
+- 🧹 Chrome Extension Integration (Coming Soon)
+- 🔐 Authentication with Supabase
+- ⚡ Hosted on Vercel
+
+---
+
+## 📸 Preview
+
+> 💡 Hosted at [https://jobmate.vercel.app](https://jobmate.vercel.app)
+
+
+
+---
+
+## ✨ Getting Started
+
+### 1. Clone the Repo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/jobmate.git
+cd jobmate
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+### 3. Setup Environment Variables
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+Create a `.env.local` file in the root and add the following:
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+OPENAI_API_KEY=your_openai_api_key
+CLOUDCONVERT_API_KEY=your_cloudconvert_key
+```
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## 🧠 Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Frontend**: Next.js, Tailwind CSS, Framer Motion, MUI
+- **Auth & DB**: Supabase (PostgreSQL, RLS Policies)
+- **AI**: OpenAI API for resume generation
+- **File Handling**: Supabase Storage, CloudConvert
+- **Deployment**: Vercel
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧪 To Do (Phases)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+### ✅ Phase 1 - MVP
+- [x] Auth + Supabase
+- [x] Resume upload + history
+- [x] Application auto-fill form
+- [x] User dashboard
+- [x] Vercel deployment
+
+### 🚧 Phase 2 - AI Tailoring & Enhancements
+- [ ] AI resume tailoring
+- [ ] Smart suggestions panel
+- [ ] Chrome Extension for job scraping
+- [ ] Auto-apply system (bots)
+
+---
+
+## 🧑‍💻 Contributing
+
+Got ideas or want to collaborate? Feel free to fork this repo and open a pull request.
+
+---
+
+## 📄 License
+
+MIT © [Your Name or JobMate](https://jobmate.vercel.app)
