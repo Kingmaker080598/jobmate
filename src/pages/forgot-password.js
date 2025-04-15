@@ -8,7 +8,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const router = useRouter()
+
 
   const handleReset = async () => {
     setMessage('')
@@ -64,9 +64,9 @@ export default function ForgotPasswordPage() {
         </button>
 
         <p className="text-sm text-center mt-6 text-white/70">
-          <a href="/login" className="text-indigo-300 hover:underline">
-            ← Back to login
-          </a>
+        <Link href="/login" className="text-indigo-300 hover:underline">
+          ← Back to login
+        </Link>
         </p>
       </div>
     </div>

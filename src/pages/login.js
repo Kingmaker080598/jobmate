@@ -6,8 +6,8 @@ import { useRouter } from 'next/router';
 import { LockKeyhole, UserPlus2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Typography } from '@mui/material';
+import Link from 'next/link';
 
-// Futuristic CSS (add to src/index.css or src/AuthPage.css)
 const futuristicStyles = `
   .futuristic-bg {
     background: linear-gradient(135deg, #0a0a23 0%, #1a1a4e 50%, #2a1a6e 100%);
@@ -108,7 +108,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const [mode, setMode] = useState(router?.query?.mode === 'signup' ? 'signup' : 'login');
+  const [mode, setMode] = useState(typeof window !== 'undefined' && router?.query?.mode === 'signup' ? 'signup' : 'login');
 
   const handleAuth = async () => {
     setError('');
@@ -118,7 +118,7 @@ export default function AuthPage() {
     }
 
     if (mode === 'signup') {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -130,17 +130,14 @@ export default function AuthPage() {
       return;
     }
 
-    // LOGIN
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+    const { error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (loginError) return setError(loginError.message);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
 
     const userId = session?.user?.id;
     const userEmail = session?.user?.email;
@@ -157,7 +154,7 @@ export default function AuthPage() {
           {
             id: userId,
             email: userEmail,
-            name: name || 'User', // Fallback for login
+            name: name || 'User',
             signup_time: new Date().toISOString(),
           },
         ]);
@@ -181,7 +178,6 @@ export default function AuthPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Header */}
         <div className="text-center mb-6">
           {mode === 'login' ? (
             <LockKeyhole className="w-8 h-8 mx-auto mb-2" style={{ color: '#9333ea', filter: 'drop-shadow(0 0 4px rgba(147, 51, 234, 0.6))' }} />
@@ -204,7 +200,6 @@ export default function AuthPage() {
           </Typography>
         </div>
 
-        {/* Form */}
         {mode === 'signup' && (
           <input
             type="text"
@@ -230,20 +225,18 @@ export default function AuthPage() {
         />
         {mode === 'login' && (
           <div className="text-right mb-4">
-            <a href="/forgot-password" className="futuristic-link text-sm">
+            <Link href="/forgot-password" className="futuristic-link text-sm">
               Forgot Password?
-            </a>
+            </Link>
           </div>
         )}
 
-        {/* Error Message */}
         {error && (
           <Typography className="error-text text-sm mb-4 text-center">
             {error}
           </Typography>
         )}
 
-        {/* Action Button */}
         <motion.button
           className="futuristic-button"
           onClick={handleAuth}
@@ -253,7 +246,6 @@ export default function AuthPage() {
           {mode === 'login' ? 'Login' : 'Sign Up'}
         </motion.button>
 
-        {/* Toggle Mode */}
         <Typography className="futuristic-text text-sm text-center mt-4">
           {mode === 'login' ? 'New to JobMate?' : 'Already a member?'}{' '}
           <span

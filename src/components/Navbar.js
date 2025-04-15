@@ -5,7 +5,6 @@ import { useRouter } from 'next/router'
 import LogoutIcon from '@mui/icons-material/Logout'
 
 export default function Navbar() {
-  const [profile, setProfile] = useState(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export default function Navbar() {
       <Link href="/home" className="text-xl font-bold">
         JobMate
       </Link>
-
       <div className="space-x-6 flex items-center">
         <Link href="/profile" className="hover:underline">
           Profile
@@ -46,13 +44,6 @@ export default function Navbar() {
         <Link href="/history" className="hover:underline">
           Resume History
         </Link>
-
-        {/* {profile?.name && (
-          <span className="text-sm text-white/70 hidden sm:inline">
-            Hi, <strong>{profile.name}</strong>
-          </span>
-        )} */}
-
         <button
           onClick={handleLogout}
           className="text-white hover:text-red-400 transition-transform hover:scale-110"

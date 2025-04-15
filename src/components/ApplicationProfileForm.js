@@ -131,7 +131,7 @@ export default function ApplicationProfileForm({ user }) {
             <MenuItem value="">Prefer not to say</MenuItem>
             <MenuItem value="Yes, I have a disability">Yes, I have a disability</MenuItem>
             <MenuItem value="No, I do not have a disability">No, I do not have a disability</MenuItem>
-            <MenuItem value="I don't wish to answer">I don't wish to answer</MenuItem>
+            <MenuItem value="I don&#39;t wish to answer">I don&#39;t wish to answer</MenuItem>
           </Select>
         </FormControl>
 
@@ -141,7 +141,7 @@ export default function ApplicationProfileForm({ user }) {
             <MenuItem value="">Prefer not to say</MenuItem>
             <MenuItem value="I am a veteran">I am a veteran</MenuItem>
             <MenuItem value="I am not a veteran">I am not a veteran</MenuItem>
-            <MenuItem value="I don't wish to answer">I don't wish to answer</MenuItem>
+            <MenuItem value="I don&#39;t wish to answer">I don&#39;t wish to answer</MenuItem>
           </Select>
         </FormControl>
 

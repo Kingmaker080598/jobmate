@@ -1,6 +1,6 @@
 // components/SmartAIPanel.js (Updated to show section status)
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Sparkles, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import { useUser } from '@/contexts/UserContext'

@@ -14,7 +14,7 @@ export default function RequireAuth({ children }) {
         setUser(session.user)
       }
     })
-  }, [])
+  }, [router])
 
   if (!user) return <p className="p-6">Redirecting to login...</p>
 
