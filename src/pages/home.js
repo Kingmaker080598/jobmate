@@ -431,9 +431,9 @@ export default function HomePage() {
               <p><strong>A:</strong> Head to your profile page to upload your resume and set preferences.</p>
               <hr className="my-2 futuristic-chat-divider" />
               <p><strong>Q:</strong> Where is my last resume?</p>
-              <p><strong>A:</strong> Check the 'Resume History' page for your previous downloads.</p>
+              <p><strong>A:</strong> Check the &apos;Resume History&apos; page for your previous downloads.</p>
               <hr className="my-2 futuristic-chat-divider" />
-              <p><strong>Q:</strong> What’s coming next?</p>
+              <p><strong>Q:</strong> What&apos;s coming next?</p>
               <p><strong>A:</strong> Tailor Resume, Smart Suggestions, AI Cover Letters, and more!</p>
               <p className="text-center mt-3 text-xs opacity-70">Stay tuned for premium updates...</p>
             </div>
