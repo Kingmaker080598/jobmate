@@ -287,11 +287,11 @@ export default function HomePage() {
                 textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
               }}
             >
-              Let's Get You Set Up
+              Let&apos;s Get You Set Up
             </Typography>
             <div className="futuristic-card p-6">
               <Typography variant="h6" className="futuristic-subtext mb-2 font-semibold">
-                Complete these steps to unlock JobMate’s full potential:
+                Complete these steps to unlock JobMate&apos;s full potential:
               </Typography>
               <LinearProgress
                 variant="determinate"
