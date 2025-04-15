@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
-import { supabase } from '@/lib/supabaseClient';
+// import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
@@ -229,7 +229,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!user) router.push('/login');
-  }, [user]);
+  }, [user, router]);
 
   if (!user) return <Typography className="p-6 futuristic-text">Loading your AI dashboard...</Typography>;
 

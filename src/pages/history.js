@@ -5,7 +5,6 @@ import RequireAuth from '@/components/RequireAuth'
 import { motion } from 'framer-motion'
 import { Clock } from 'lucide-react'
 
-
 export default function HistoryPage() {
   const [user, setUser] = useState(null)
   const [resumes, setResumes] = useState([])
@@ -32,7 +31,7 @@ export default function HistoryPage() {
 
   const downloadFile = async (url, filename, targetFormat = 'original', resumeId = null) => {
     const ext = url.split('.').pop().toLowerCase();
-  
+
     if (targetFormat === 'original') {
       const a = document.createElement('a');
       a.href = url;
@@ -40,18 +39,17 @@ export default function HistoryPage() {
       a.click();
       return;
     }
-  
+
     if (targetFormat === 'pdf' && ext === 'pdf') {
       downloadFile(url, filename + '.pdf', 'original');
       return;
     }
-  
+
     if (targetFormat === 'pdf' && ext === 'docx') {
       try {
         const cacheKey = `converted_pdf_${resumeId}`;
         const cachedUrl = localStorage.getItem(cacheKey);
-  
-        // ✅ Use cached PDF if available
+
         if (cachedUrl) {
           const a = document.createElement('a');
           a.href = cachedUrl;
@@ -59,9 +57,9 @@ export default function HistoryPage() {
           a.click();
           return;
         }
-  
+
         setConvertingId(resumeId);
-  
+
         const res = await fetch('/api/convert', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -70,15 +68,14 @@ export default function HistoryPage() {
             outputFileName: filename,
           }),
         });
-  
+
         if (!res.ok) throw new Error('Conversion failed.');
-  
+
         const blob = await res.blob();
         const blobUrl = window.URL.createObjectURL(blob);
-  
-        // 💾 Cache the blob URL
+
         localStorage.setItem(cacheKey, blobUrl);
-  
+
         const a = document.createElement('a');
         a.href = blobUrl;
         a.download = `${filename}.pdf`;
@@ -91,17 +88,15 @@ export default function HistoryPage() {
       }
     }
   };
-  
-  
 
   const handleView = (url) => {
     if (!url) {
       alert('No resume available to view.')
       return
     }
-  
+
     const fileExtension = url.split('.').pop().toLowerCase()
-  
+
     if (fileExtension === 'pdf') {
       window.open(url, '_blank')
     } else if (fileExtension === 'docx' || fileExtension === 'doc') {
@@ -111,7 +106,6 @@ export default function HistoryPage() {
       alert('Unsupported file type for preview.')
     }
   }
-  
 
   if (!user) return <p className="p-6 text-white">Loading resume history...</p>
 
@@ -130,7 +124,7 @@ export default function HistoryPage() {
         </motion.div>
 
         {resumes.length === 0 ? (
-          <p className="text-center text-gray-400">You haven't tailored or uploaded any resumes yet.</p>
+          <p className="text-center text-gray-400">You haven&apos;t tailored or uploaded any resumes yet.</p>
         ) : (
           <div className="space-y-6 max-w-4xl mx-auto">
             {resumes.map((r) => (
@@ -163,20 +157,17 @@ export default function HistoryPage() {
                     Download PDF
                   </button>
 
-
                   <button
                     onClick={() => downloadFile(r.resume_url, r.job_title.replace(/\s+/g, '_'), 'original')}
                     className="text-sm bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded text-white transition"
                   >
                     Download DOCX
                   </button>
-
                 </div>
 
                 {convertingId === r.id && (
                   <p className="text-sm text-yellow-300 mt-2">🔄 Converting DOCX to PDF...</p>
                 )}
-
               </motion.div>
             ))}
           </div>

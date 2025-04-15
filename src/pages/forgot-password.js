@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/router'
+import Link from 'next/link' 
 import { Lock } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
