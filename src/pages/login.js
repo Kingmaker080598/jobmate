@@ -111,11 +111,26 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const [mode, setMode] = useState(typeof window !== 'undefined' && router?.query?.mode === 'signup' ? 'signup' : 'login');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const resetFields = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    if (error) setError(error.message);
+  };
 
   const handleAuth = async () => {
     setError('');
+    setLoading(true);
 
     if (!email || !password || (mode === 'signup' && !name)) {
+      setLoading(false);
       return setError('Please fill in all required fields');
     }
 
@@ -125,9 +140,12 @@ export default function AuthPage() {
         password,
       });
 
+      setLoading(false);
+
       if (signUpError) return setError(signUpError.message);
 
       alert('🎉 Account created! Please check your email to confirm your address.');
+      resetFields();
       setMode('login');
       return;
     }
@@ -137,37 +155,11 @@ export default function AuthPage() {
       password,
     });
 
+    setLoading(false);
+
     if (loginError) return setError(loginError.message);
 
-    const { data: { session } } = await supabase.auth.getSession();
-
-    const userId = session?.user?.id;
-    const userEmail = session?.user?.email;
-
-    if (userId) {
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (!existingUser) {
-        const { error: insertError } = await supabase.from('users').insert([
-          {
-            id: userId,
-            email: userEmail,
-            name: name || 'User',
-            signup_time: new Date().toISOString(),
-          },
-        ]);
-
-        if (insertError) {
-          console.error('User insert error:', insertError.message);
-          return setError('Failed to save user info');
-        }
-      }
-    }
-
+    resetFields();
     router.push('/home');
   };
 
@@ -218,15 +210,23 @@ export default function AuthPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <input
-          type="password"
-          placeholder="Password"
-          className="futuristic-input mb-4"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            className="futuristic-input mb-4"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <span
+            className="absolute right-3 top-3 cursor-pointer text-sm text-gray-400"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </span>
+        </div>
         {mode === 'login' && (
-          <div className="text-right mb-4">
+          <div className="text-center mb-4">
             <Link href="/forgot-password" className="futuristic-link text-sm">
               Forgot Password?
             </Link>
@@ -244,19 +244,35 @@ export default function AuthPage() {
           onClick={handleAuth}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          disabled={loading}
         >
-          {mode === 'login' ? 'Login' : 'Sign Up'}
+          {loading ? 'Loading...' : mode === 'login' ? 'Login' : 'Sign Up'}
         </motion.button>
 
-        <Typography className="futuristic-text text-sm text-center mt-4">
-          {mode === 'login' ? 'New to JobMate?' : 'Already a member?'}{' '}
-          <span
-            onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-            className="futuristic-link cursor-pointer"
-          >
-            {mode === 'login' ? 'Sign Up' : 'Login'}
-          </span>
-        </Typography>
+        <motion.button
+          className="futuristic-button mt-4 flex items-center justify-center gap-2"
+          onClick={handleGoogleLogin}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <img
+            src="/google_logo.png"
+            alt="Google Logo"
+            className="w-5 h-5"
+          />
+          Sign in with Google
+        </motion.button>
+        <div className="mt-20"> {/* Added a wrapper div with margin-top */}
+          <Typography className="futuristic-text text-sm text-center">
+            {mode === 'login' ? 'New to JobMate?' : 'Already a member?'}{' '}
+            <span
+              onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+              className="futuristic-link cursor-pointer"
+            >
+              {mode === 'login' ? 'Sign Up' : 'Login'}
+            </span>
+          </Typography>
+        </div>
       </motion.div>
     </div>
   );

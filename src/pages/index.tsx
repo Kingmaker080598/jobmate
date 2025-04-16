@@ -142,9 +142,7 @@ export default function LandingPage() {
           <Link href="/login">
             <MuiButton className="futuristic-button text-sm">Login</MuiButton>
           </Link>
-          <Link href="/signup">
-            <MuiButton className="futuristic-button text-sm">Sign Up</MuiButton>
-          </Link>
+
         </div>
       </header>
 
@@ -174,13 +172,17 @@ export default function LandingPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Typography
-            className="futuristic-subtext text-lg max-w-2xl mx-auto mb-8"
+            className="futuristic-subtext text-lg max-w-2xl mx-auto mb-16 sm:mt-24 mt-16"
           >
             Transform your job hunt with JobMate’s intelligent tools. Upload once, shine everywhere.
           </Typography>
         </motion.div>
         <Link href="/login">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <motion.div
+            className="mt-16" // Added margin-top to the wrapper div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <MuiButton className="futuristic-button text-lg px-8 py-3">
               Launch Now
             </MuiButton>
@@ -192,7 +194,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-24 px-6 max-w-6xl mx-auto">
         <Typography
           variant="h3"
-          className="futuristic-text text-center font-semibold mb-16 sm:text-4xl text-3xl"
+          className="futuristic-text text-center font-semibold mb-16 sm:text-4xl text-3xl" // Increased mb-16
           style={{
             background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
             WebkitBackgroundClip: 'text',
@@ -202,7 +204,7 @@ export default function LandingPage() {
         >
           How JobMate Works
         </Typography>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pt-4"> {/* Added pt-4 */}
           {[
             { icon: FileText, text: 'Upload Resume' },
             { icon: Brain, text: 'Add Job Description' },
@@ -230,7 +232,7 @@ export default function LandingPage() {
       <section className="py-24 px-6 text-center relative z-1">
         <Typography
           variant="h3"
-          className="futuristic-text font-semibold mb-6 sm:text-4xl text-3xl"
+          className="futuristic-text font-semibold mb-48 sm:text-4xl text-3xl" // Increased mb-8 to mb-12
           style={{
             background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
             WebkitBackgroundClip: 'text',
@@ -240,15 +242,15 @@ export default function LandingPage() {
         >
           Why Choose JobMate?
         </Typography>
-        <div className="mb-24 flex justify-center"> {/* Added flex and justify-center */}
+        <div className="flex justify-center mb-8"> {/* Added flex and justify-center */}
           <Typography
-            className="futuristic-subtext max-w-2xl text-lg text-center" // Added text-center
+            className="futuristic-subtext max-w-2xl text-lg text-center mt-16" // Added mt-8 to move it down
           >
             Elevate your career with AI that’s fast, precise, and designed for success. JobMate is your edge in the job market.
           </Typography>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-8">
           {[
             {
               icon: Lightbulb,

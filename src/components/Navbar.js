@@ -1,36 +1,38 @@
-import { useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import LogoutIcon from '@mui/icons-material/Logout'
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useUser } from '@/contexts/UserContext'; // ✅ Add this
 
 export default function Navbar() {
-  const router = useRouter()
+  const router = useRouter();
+  const { setProfile } = useUser(); // ✅ Access setProfile from context
 
   useEffect(() => {
     const fetchProfile = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
         const { data: userData } = await supabase
           .from('users')
           .select('name')
           .eq('id', session.user.id)
-          .maybeSingle()
+          .maybeSingle();
 
-        setProfile(userData)
+        if (userData) setProfile(userData); // ✅ Safe update via context
       }
-    }
+    };
 
-    fetchProfile()
-  }, [])
+    fetchProfile();
+  }, [setProfile]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
   return (
     <nav className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
@@ -53,5 +55,5 @@ export default function Navbar() {
         </button>
       </div>
     </nav>
-  )
+  );
 }
