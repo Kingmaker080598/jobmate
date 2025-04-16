@@ -5,7 +5,9 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Typography, Button as MuiButton } from '@mui/material';
 import { Rocket, FileText, Brain, ShieldCheck, Lightbulb, Clock, ClipboardCheck } from 'lucide-react';
-
+import { supabase } from '@/lib/supabaseClient';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 // Premium Luxurious Futuristic CSS (aligned with home.js)
 const futuristicStyles = `
   .futuristic-bg {
@@ -123,6 +125,17 @@ const futuristicStyles = `
 `;
 
 export default function LandingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.replace('/home') // 🔁 Redirect authenticated users
+      }
+    }
+    checkSession()
+  }, [])
   return (
     <div className="futuristic-bg">
       <style>{futuristicStyles}</style>

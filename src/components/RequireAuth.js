@@ -1,22 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useUser } from '@/contexts/UserContext'
 import { useRouter } from 'next/router'
-import { supabase } from '@/lib/supabaseClient'
+import { useEffect } from 'react'
 
 export default function RequireAuth({ children }) {
-  const [user, setUser] = useState(null)
+  const { user } = useUser()
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/login')
-      } else {
-        setUser(session.user)
-      }
-    })
-  }, [router])
+    if (user === null) {
+      router.push('/login')
+    }
+  }, [user])
 
-  if (!user) return <p className="p-6">Redirecting to login...</p>
+  if (!user) return <p className="text-white p-6">Checking authentication...</p>
 
   return children
 }
