@@ -277,18 +277,10 @@ export default function HomePage() {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6 }}
           >
-            <Typography
-              variant="h4"
-              className="futuristic-text font-bold text-center mb-10"
-              style={{
-                background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
-              }}
-            >
-              Let&apos;s Get You Set Up
-            </Typography>
+            <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' } }}>
+            Let&apos;s Get You Set Up
+          </Typography>
+
             <div className="futuristic-card p-6">
               <Typography variant="h6" className="futuristic-subtext mb-2 font-semibold">
                 Complete these steps to unlock JobMate&apos;s full potential:
@@ -299,7 +291,8 @@ export default function HomePage() {
                 className="futuristic-progress"
                 sx={{ height: '10px', borderRadius: '6px' }}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
+
                 <StepCard label="Complete Profile" done={true} />
                 <StepCard label="Download Chrome Extension" done={true} />
                 <StepCard label="Auto-Fill Application" done={false} />
@@ -326,7 +319,8 @@ export default function HomePage() {
             >
               Explore JobMate Features
             </Typography>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
+
               <FeatureCard
                 href="/profile"
                 icon={<User className="w-6 h-6 futuristic-icon" />}
@@ -414,7 +408,7 @@ export default function HomePage() {
 
         <motion.button
           onClick={() => setShowChat(!showChat)}
-          className="fixed bottom-6 right-6 z-50 futuristic-button p-3 rounded-full shadow-lg"
+         className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 p-2 sm:p-3"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           animate={{ boxShadow: ['0 0 10px rgba(255, 215, 0, 0.5)', '0 0 20px rgba(255, 215, 0, 0.8)', '0 0 10px rgba(255, 215, 0, 0.5)'] }}

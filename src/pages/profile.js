@@ -273,8 +273,8 @@ export default function ProfilePage() {
     <RequireAuth>
       <style>{futuristicStyles}</style>
       <Navbar />
-      <div className="futuristic-bg">
-        <div style={{ maxWidth: '900px', width: '100%', margin: '0 auto' }}>
+       <div className="futuristic-bg px-4">
+         <div className="max-w-5xl w-full mx-auto py-10">
           <motion.div
             className="futuristic-header text-center mb-12"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -306,7 +306,7 @@ export default function ProfilePage() {
             </Typography>
           )}
 
-          <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6"> 
             {/* Card 1: User Information */}
             <motion.div
               className="futuristic-card"
@@ -395,12 +395,13 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Card 3: Auto-Fill Application Details */}
+             {/* Full-width Card 3 */}
             <motion.div
-              className="futuristic-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
+                className="futuristic-card sm:col-span-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
               <ApplicationProfileForm user={user} />
             </motion.div>
           </div>

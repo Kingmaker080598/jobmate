@@ -40,7 +40,8 @@ const futuristicStyles = `
     border-radius: 16px;
     backdrop-filter: blur(8px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    padding: 32px;
+    padding: 24px;
+    margin: 16px;
     max-width: 400px;
     width: 100%;
     position: relative;
@@ -61,7 +62,7 @@ const futuristicStyles = `
     color: #d4d4ff;
     padding: 12px;
     width: 100%;
-    font-size: 16px;
+    font-size: 14px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
   }
   .futuristic-input::placeholder {
@@ -76,7 +77,8 @@ const futuristicStyles = `
     background: linear-gradient(90deg, #9333ea, #3b82f6);
     border: none;
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
+    font-size: 14px;
     color: #fff;
     font-weight: 600;
     text-transform: uppercase;
