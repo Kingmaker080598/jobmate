@@ -255,7 +255,8 @@ export default function HomePage() {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Welcome back, {profile?.name || user.email.split('@')[0]} 👋
+             Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]} 👋
+
             </Typography>
             <Typography className="futuristic-subtext mt-4 text-2xl w-full text-center">
 
