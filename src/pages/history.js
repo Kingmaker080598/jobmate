@@ -4,32 +4,28 @@ import Navbar from '@/components/Navbar';
 import RequireAuth from '@/components/RequireAuth';
 import { motion } from 'framer-motion';
 import { Clock } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
 
 export default function HistoryPage() {
-  const [user, setUser] = useState(null);
+  const { user } = useUser();
   const [resumes, setResumes] = useState([]);
   const [convertingId, setConvertingId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      setUser(session.user);
+      if (!user) return;
 
       const { data, error } = await supabase
         .from('resume_history')
         .select('id, job_title, resume_url, created_at')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (!error) setResumes(data || []);
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const downloadFile = async (
     url,
