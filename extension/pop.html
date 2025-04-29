@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>JobMate Extension</title>
+    <link rel="icon" href="icons/icon-48.png" type="image/png" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #0a0a23 0%,
+          #1a1a4e 50%,
+          #2a1a6e 100%
+        );
+        color: #d4d4ff;
+        margin: 0;
+        padding: 20px;
+        width: 300px;
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      p {
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 0 10px;
+      }
+      .start-button {
+        background: linear-gradient(90deg, #9333ea, #3b82f6);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 600;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 200px;
+      }
+      .start-button:hover {
+        background: linear-gradient(90deg, #a855f7, #60a5fa);
+        box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <img
+      src="icons/android-chrome-192x192.png"
+      alt="JobMate Logo"
+      class="logo"
+    />
+    <h1>Welcome to JobMate!</h1>
+    <p>Generate AI-tailored resumes directly from job posts.</p>
+
+    <button id="startButton" class="start-button">Sign In with JobMate</button>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

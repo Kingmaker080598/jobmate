@@ -10,7 +10,7 @@ export default function RequireAuth({ children }) {
     if (user === null) {
       router.push('/login')
     }
-  }, [user])
+  }, [user, router])
 
   if (!user) return <p className="text-white p-6">Checking authentication...</p>
 

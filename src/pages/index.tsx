@@ -131,11 +131,11 @@ export default function LandingPage() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        router.replace('/home') // 🔁 Redirect authenticated users
+        router.replace('/home')
       }
     }
     checkSession()
-  }, [])
+  }, [router])
   return (
     <div className="futuristic-bg">
       <style>{futuristicStyles}</style>

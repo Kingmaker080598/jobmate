@@ -29,7 +29,7 @@ export default function AuthCallback() {
     }
 
     handleAuth()
-  }, [])
+  }, [router])
 
   return <p className="text-white p-6">Finishing sign-in...</p>
 }

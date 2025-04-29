@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
   }, [])
 
   return (
-    <UserContext.Provider value={{ user, profile, fetchUserData }}>
+    <UserContext.Provider value={{ user, profile, setProfile, fetchUserData }}>
       {children}
     </UserContext.Provider>
   )
