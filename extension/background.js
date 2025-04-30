@@ -17,46 +17,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       isAuthenticated: isAuthenticated,
       authToken: authToken
     });
+    return true; // Keep the message channel open for async response
   }
-});
-
-// Listen for tab updates to detect login success
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url.includes('jobmate-beta.vercel.app')) {
-    // Inject a content script to check for login success
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      function: checkForLoginSuccess
-    });
-  }
-});
-
-// Function to check for login success
-function checkForLoginSuccess() {
-  // Listen for the login success message
-  window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'JOBMATE_LOGIN_SUCCESS') {
-      // Send the token to the background script
-      chrome.runtime.sendMessage({
-        type: 'LOGIN_SUCCESS',
-        token: event.data.token
-      });
-    }
-  });
   
-  // Check if token is already in localStorage
-  const token = localStorage.getItem('jobmate_extension_token');
-  if (token) {
-    chrome.runtime.sendMessage({
-      type: 'LOGIN_SUCCESS',
-      token: token
-    });
-  }
-}
-
-// Listen for login success message from content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'LOGIN_SUCCESS') {
+    console.log('Received login success with token');
+    
     // Store auth state
     isAuthenticated = true;
     authToken = message.token;
@@ -73,5 +39,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       isAuthenticated: true,
       authToken: message.token
     });
+  }
+});
+
+// Listen for tab updates to detect login success
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('jobmate-beta.vercel.app')) {
+    // Inject the content script to check for login success
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['content-auth.js']
+    }).catch(err => console.error('Script injection error:', err));
   }
 });
