@@ -1,37 +1,30 @@
 {
   "manifest_version": 3,
-  "name": "JobMate Autofill",
+  "name": "JobMate AI Assistant",
   "version": "1.0",
-  "description": "Automatically fill job applications with your JobMate profile data",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "https://jobmate-beta.vercel.app/*"
-  ],
+  "description": "AI-powered resume tailoring and autofill assistant all in one click.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": ["https://jobmate-beta.vercel.app/*", "https://*/*"],
   "background": {
     "service_worker": "background.js"
   },
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "images/icon16.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
-    }
-  },
   "content_scripts": [
     {
-      "matches": ["https://jobmate-beta.vercel.app/*"],
-      "js": ["content-auth.js"]
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
     }
   ],
-  "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
+  "action": {
+    "default_popup": "pop.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   }
 }
