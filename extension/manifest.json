@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "JobMate AI Assistant",
   "version": "1.0",
-  "description": "AI-powered resume tailoring and autofill assistant.",
+  "description": "AI-powered resume tailoring and autofill assistant all in one click.",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -15,7 +15,8 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://jobmate-beta.vercel.app/*"
+    "https://jobmate-beta.vercel.app/*",
+    "https://*/*"
   ],
   "background": {
     "service_worker": "background.js"

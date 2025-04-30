@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>JobMate Extension</title>
-    <link rel="icon" href="icons/icon-48.png" type="image/png" />
+    <title>JobMate</title>
     <style>
       body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -56,6 +54,14 @@
         background: linear-gradient(90deg, #a855f7, #60a5fa);
         box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
       }
+      #autoFillButton {
+        display: none;
+      }
+      #logoutButton {
+        display: none;
+        margin-top: 10px;
+        background-color: #dc3545;
+      }
     </style>
   </head>
   <body>
@@ -68,6 +74,8 @@
     <p>Generate AI-tailored resumes directly from job posts.</p>
 
     <button id="startButton" class="start-button">Sign In with JobMate</button>
+    <button id="autoFillButton" style="display: none;" class="start-button">Auto-Fill Application</button>
+    <button id="logoutButton" style="display: none;" class="start-button">Logout</button>
 
     <script src="popup.js"></script>
   </body>
