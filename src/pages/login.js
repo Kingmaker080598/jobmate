@@ -1,6 +1,6 @@
 // pages/login.js
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/router';
 import { LockKeyhole, UserPlus2 } from 'lucide-react';
