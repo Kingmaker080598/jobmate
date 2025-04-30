@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
 export default async function handler(req, res) {
@@ -30,6 +30,8 @@ export default async function handler(req, res) {
         const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
         if (decoded.userId && decoded.exp > Date.now()) {
           userId = decoded.userId;
+        } else {
+          console.error('Token expired or invalid:', decoded);
         }
       } catch (e) {
         console.error('Token decode error:', e);

@@ -120,6 +120,8 @@ export default function AuthPage() {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user);
+        // Check if we should close the window (for extension login)
+        handleExtensionLogin();
       } else {
         setUser(null);
       }
@@ -129,6 +131,8 @@ export default function AuthPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
+        // Also check on initial load
+        handleExtensionLogin();
       }
     });
 
@@ -198,19 +202,8 @@ export default function AuthPage() {
     const isExtension = urlParams.get('extension') === 'true';
     
     if (isExtension && user) {
-      try {
-        // Get token for extension
-        const response = await fetch('/api/extension-token');
-        const { token } = await response.json();
-        
-        // Store token in localStorage for the extension to access
-        localStorage.setItem('jobmate_extension_token', token);
-        
-        // Notify the extension that login is complete
-        window.postMessage({ type: 'JOBMATE_LOGIN_SUCCESS', token }, '*');
-      } catch (error) {
-        console.error('Failed to get extension token:', error);
-      }
+      // Close this tab and return to the previous page
+      window.close();
     }
   }
   

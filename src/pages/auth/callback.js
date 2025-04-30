@@ -11,12 +11,30 @@ export default function AuthCallback() {
       const { data: { session } } = await supabase.auth.getSession()
 
       if (session) {
-        router.replace('/home')
+        // Check if this is an extension login
+        const urlParams = new URLSearchParams(window.location.search);
+        const isExtension = urlParams.get('extension') === 'true';
+        
+        if (isExtension) {
+          // Close this tab and return to the previous page
+          window.close();
+        } else {
+          router.replace('/home')
+        }
       } else {
         // Wait for session to initialize from cookie
         const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
           if (session) {
-            router.replace('/home')
+            // Check if this is an extension login
+            const urlParams = new URLSearchParams(window.location.search);
+            const isExtension = urlParams.get('extension') === 'true';
+            
+            if (isExtension) {
+              // Close this tab and return to the previous page
+              window.close();
+            } else {
+              router.replace('/home')
+            }
           } else {
             router.replace('/login')
           }

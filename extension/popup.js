@@ -100,6 +100,12 @@ document.getElementById('autoFillButton').addEventListener('click', async () => 
       files: ['content.js']
     });
 
+    // Check if we have a token
+    if (!authToken) {
+      console.error('No auth token available');
+      throw new Error('Authentication token is missing');
+    }
+
     // Then proceed with the message sending
     const response = await fetch(`https://jobmate-beta.vercel.app/api/profile?token=${authToken}`, {
       headers: {
