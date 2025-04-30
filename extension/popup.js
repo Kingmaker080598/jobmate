@@ -5,7 +5,7 @@ let authToken = null;
 
 document.getElementById('startButton').addEventListener('click', () => {
   chrome.tabs.create({
-    url: 'https://jobmate-beta.vercel.app/login?extension=true'
+    url: 'https://jobmate-beta.vercel.app/login'
   });
 });
 

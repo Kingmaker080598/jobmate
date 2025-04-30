@@ -198,16 +198,46 @@ export default function AuthPage() {
 
   // Add this function to handle extension login
   async function handleExtensionLogin() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isExtension = urlParams.get('extension') === 'true';
-    
-    if (isExtension && user) {
-      // Close this tab and return to the previous page
-      window.close();
+    try {
+      // Only proceed if user is authenticated
+      if (!user) return;
+      
+      // Generate a token for the extension
+      const tokenData = {
+        userId: user.id,
+        exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+      };
+      
+      // Encode token as base64
+      const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
+      
+      // Store token in localStorage
+      localStorage.setItem('jobmate_extension_token', token);
+      
+      // Send message to extension if this was opened from extension
+      if (typeof window !== 'undefined') {
+        // Check if window was opened by extension
+        const isExtension = document.referrer.includes('chrome-extension://');
+        
+        if (isExtension) {
+          // Send message to extension
+          window.postMessage({ 
+            type: 'JOBMATE_LOGIN_SUCCESS', 
+            token: token 
+          }, '*');
+          
+          // Close tab after a short delay to allow message to be processed
+          setTimeout(() => {
+            window.close();
+          }, 1000);
+        }
+      }
+    } catch (error) {
+      console.error('Extension login error:', error);
     }
   }
   
-  // Call this function when user is authenticated
+  // Call handleExtensionLogin when user is authenticated
   useEffect(() => {
     if (user) {
       handleExtensionLogin();
