@@ -169,6 +169,35 @@ export default function AuthPage() {
     router.push('/home');
   };
 
+  // Add this function to handle extension login
+  async function handleExtensionLogin() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isExtension = urlParams.get('extension') === 'true';
+    
+    if (isExtension && user) {
+      try {
+        // Get token for extension
+        const response = await fetch('/api/extension-token');
+        const { token } = await response.json();
+        
+        // Store token in localStorage for the extension to access
+        localStorage.setItem('jobmate_extension_token', token);
+        
+        // Notify the extension that login is complete
+        window.postMessage({ type: 'JOBMATE_LOGIN_SUCCESS', token }, '*');
+      } catch (error) {
+        console.error('Failed to get extension token:', error);
+      }
+    }
+  }
+  
+  // Call this function when user is authenticated
+  useEffect(() => {
+    if (user) {
+      handleExtensionLogin();
+    }
+  }, [user]);
+
   return (
     <div className="futuristic-bg">
       <style>{futuristicStyles}</style>

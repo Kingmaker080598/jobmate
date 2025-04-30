@@ -1,6 +1,7 @@
 // popup.js
 
 let isAuthenticated = false;
+let authToken = null;
 
 document.getElementById('startButton').addEventListener('click', () => {
   chrome.tabs.create({
@@ -11,8 +12,9 @@ document.getElementById('startButton').addEventListener('click', () => {
 async function checkAuthStatus() {
   try {
     // First check local storage
-    const result = await chrome.storage.local.get(['isAuthenticated']);
+    const result = await chrome.storage.local.get(['isAuthenticated', 'authToken']);
     isAuthenticated = result.isAuthenticated || false;
+    authToken = result.authToken || null;
     
     console.log('Auth status from storage:', isAuthenticated);
     
@@ -26,17 +28,26 @@ async function checkAuthStatus() {
     chrome.runtime.sendMessage({ type: 'CHECK_AUTH' }, (response) => {
       if (response && response.isAuthenticated) {
         isAuthenticated = true;
-        chrome.storage.local.set({ isAuthenticated: true });
+        authToken = response.authToken;
+        chrome.storage.local.set({ 
+          isAuthenticated: true,
+          authToken: response.authToken
+        });
         updateButtonVisibility();
       } else {
         isAuthenticated = false;
+        authToken = null;
         updateButtonVisibility();
       }
     });
   } catch (error) {
     console.error('Auth check failed:', error);
     isAuthenticated = false;
-    await chrome.storage.local.set({ isAuthenticated: false });
+    authToken = null;
+    await chrome.storage.local.set({ 
+      isAuthenticated: false,
+      authToken: null
+    });
     updateButtonVisibility();
   }
 }
@@ -90,8 +101,7 @@ document.getElementById('autoFillButton').addEventListener('click', async () => 
     });
 
     // Then proceed with the message sending
-    const response = await fetch('https://jobmate-beta.vercel.app/api/profile', {
-      credentials: 'include',
+    const response = await fetch(`https://jobmate-beta.vercel.app/api/profile?token=${authToken}`, {
       headers: {
         'Accept': 'application/json',
         'Cache-Control': 'no-cache'
@@ -130,7 +140,10 @@ document.getElementById('autoFillButton').addEventListener('click', async () => 
     } else {
       alert('❌ Failed to auto-fill. Please try signing in again.');
       // Reset auth state
-      await chrome.storage.local.set({ isAuthenticated: false });
+      await chrome.storage.local.set({ 
+        isAuthenticated: false,
+        authToken: null
+      });
       updateButtonVisibility();
     }
   }
@@ -139,16 +152,15 @@ document.getElementById('autoFillButton').addEventListener('click', async () => 
 // Add logout handling
 document.getElementById('logoutButton').addEventListener('click', async () => {
   try {
-    // Call logout endpoint
-    await fetch('https://jobmate-beta.vercel.app/api/auth/logout', {
-      credentials: 'include',
-      method: 'POST'
-    });
-    
     // Clear local storage
-    await chrome.storage.local.set({ isAuthenticated: false });
+    await chrome.storage.local.set({ 
+      isAuthenticated: false,
+      authToken: null
+    });
     isAuthenticated = false;
+    authToken = null;
     updateButtonVisibility();
+    alert('✅ Successfully logged out');
   } catch (error) {
     console.error('Logout failed:', error);
   }
