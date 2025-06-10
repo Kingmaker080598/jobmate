@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/contexts/UserContext';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -87,64 +86,19 @@ const ApplicationTracker = () => {
     }
   };
 
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return;
+  const updateApplicationStatus = async (applicationId, newStatus) => {
+    try {
+      const { error } = await supabase
+        .from('job_applications')
+        .update({ status: newStatus })
+        .eq('id', applicationId);
 
-    const { source, destination } = result;
-    
-    if (source.droppableId === destination.droppableId) {
-      // Reordering within the same column
-      const column = columns[source.droppableId];
-      const items = Array.from(column.items);
-      const [reorderedItem] = items.splice(source.index, 1);
-      items.splice(destination.index, 0, reorderedItem);
-
-      setColumns(prev => ({
-        ...prev,
-        [source.droppableId]: {
-          ...column,
-          items
-        }
-      }));
-    } else {
-      // Moving between columns
-      const sourceColumn = columns[source.droppableId];
-      const destColumn = columns[destination.droppableId];
-      const sourceItems = Array.from(sourceColumn.items);
-      const destItems = Array.from(destColumn.items);
-      const [movedItem] = sourceItems.splice(source.index, 1);
-      
-      // Update the status
-      movedItem.status = destination.droppableId;
-      destItems.splice(destination.index, 0, movedItem);
-
-      setColumns(prev => ({
-        ...prev,
-        [source.droppableId]: {
-          ...sourceColumn,
-          items: sourceItems
-        },
-        [destination.droppableId]: {
-          ...destColumn,
-          items: destItems
-        }
-      }));
-
-      // Update in database
-      try {
-        const { error } = await supabase
-          .from('job_applications')
-          .update({ status: destination.droppableId })
-          .eq('id', movedItem.id);
-
-        if (error) throw error;
-        toast.success('Application status updated');
-      } catch (error) {
-        console.error('Error updating status:', error);
-        toast.error('Failed to update status');
-        // Revert the change
-        fetchApplications();
-      }
+      if (error) throw error;
+      toast.success('Application status updated');
+      fetchApplications();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update status');
     }
   };
 
@@ -233,7 +187,7 @@ const ApplicationTracker = () => {
     setEditDialogOpen(true);
   };
 
-  const ApplicationCard = ({ application, index }) => {
+  const ApplicationCard = ({ application }) => {
     const getStatusColor = (status) => {
       const colors = {
         applied: 'bg-blue-100 text-blue-800',
@@ -247,85 +201,94 @@ const ApplicationTracker = () => {
     };
 
     return (
-      <Draggable draggableId={application.id.toString()} index={index}>
-        {(provided, snapshot) => (
-          <motion.div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            layout
-            className={`bg-white rounded-lg shadow-md p-4 mb-3 border border-gray-200 cursor-pointer transition-all ${
-              snapshot.isDragging ? 'shadow-lg rotate-2' : 'hover:shadow-lg'
-            }`}
-            onClick={() => openEditDialog(application)}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <Typography variant="h6" className="font-semibold text-gray-900 text-sm">
-                  {application.job_title}
-                </Typography>
-                <div className="flex items-center gap-1 text-gray-600 text-xs mt-1">
-                  <Building className="w-3 h-3" />
-                  <span>{application.company}</span>
-                </div>
-              </div>
-              <div className="flex gap-1">
-                {application.job_url && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(application.job_url, '_blank');
-                    }}
-                    className="p-1 text-gray-400 hover:text-blue-600"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                  </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteApplication(application.id);
-                  }}
-                  className="p-1 text-gray-400 hover:text-red-600"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
+      <motion.div
+        layout
+        className="bg-white rounded-lg shadow-md p-4 mb-3 border border-gray-200 cursor-pointer transition-all hover:shadow-lg"
+        onClick={() => openEditDialog(application)}
+      >
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <Typography variant="h6" className="font-semibold text-gray-900 text-sm">
+              {application.job_title}
+            </Typography>
+            <div className="flex items-center gap-1 text-gray-600 text-xs mt-1">
+              <Building className="w-3 h-3" />
+              <span>{application.company}</span>
             </div>
-
-            {application.location && (
-              <div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
-                <MapPin className="w-3 h-3" />
-                <span>{application.location}</span>
-              </div>
+          </div>
+          <div className="flex gap-1">
+            {application.job_url && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(application.job_url, '_blank');
+                }}
+                className="p-1 text-gray-400 hover:text-blue-600"
+              >
+                <ExternalLink className="w-3 h-3" />
+              </button>
             )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteApplication(application.id);
+              }}
+              className="p-1 text-gray-400 hover:text-red-600"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
 
-            {application.salary && (
-              <div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
-                <DollarSign className="w-3 h-3" />
-                <span>{application.salary}</span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-1 text-gray-400 text-xs">
-              <Calendar className="w-3 h-3" />
-              <span>
-                {application.applied_at 
-                  ? new Date(application.applied_at).toLocaleDateString()
-                  : 'No date'
-                }
-              </span>
-            </div>
-
-            {application.notes && (
-              <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                {application.notes.substring(0, 100)}
-                {application.notes.length > 100 && '...'}
-              </div>
-            )}
-          </motion.div>
+        {application.location && (
+          <div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
+            <MapPin className="w-3 h-3" />
+            <span>{application.location}</span>
+          </div>
         )}
-      </Draggable>
+
+        {application.salary && (
+          <div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
+            <DollarSign className="w-3 h-3" />
+            <span>{application.salary}</span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-1 text-gray-400 text-xs">
+          <Calendar className="w-3 h-3" />
+          <span>
+            {application.applied_at 
+              ? new Date(application.applied_at).toLocaleDateString()
+              : 'No date'
+            }
+          </span>
+        </div>
+
+        {application.notes && (
+          <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+            {application.notes.substring(0, 100)}
+            {application.notes.length > 100 && '...'}
+          </div>
+        )}
+
+        {/* Status change buttons */}
+        <div className="mt-3 flex flex-wrap gap-1">
+          {Object.keys(columns).map(status => (
+            application.status !== status && (
+              <button
+                key={status}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateApplicationStatus(application.id, status);
+                }}
+                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+              >
+                Move to {columns[status].title}
+              </button>
+            )
+          ))}
+        </div>
+      </motion.div>
     );
   };
 
@@ -342,28 +305,16 @@ const ApplicationTracker = () => {
         />
       </div>
       
-      <Droppable droppableId={column.id}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`min-h-[400px] transition-colors ${
-              snapshot.isDraggingOver ? 'bg-blue-50' : ''
-            }`}
-          >
-            <AnimatePresence>
-              {column.items.map((application, index) => (
-                <ApplicationCard
-                  key={application.id}
-                  application={application}
-                  index={index}
-                />
-              ))}
-            </AnimatePresence>
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
+      <div className="min-h-[400px]">
+        <AnimatePresence>
+          {column.items.map((application) => (
+            <ApplicationCard
+              key={application.id}
+              application={application}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 
@@ -394,13 +345,11 @@ const ApplicationTracker = () => {
         </div>
 
         {/* Kanban Board */}
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-            {Object.values(columns).map(column => (
-              <Column key={column.id} column={column} />
-            ))}
-          </div>
-        </DragDropContext>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          {Object.values(columns).map(column => (
+            <Column key={column.id} column={column} />
+          ))}
+        </div>
 
         {/* Edit/Add Application Dialog */}
         <Dialog 
