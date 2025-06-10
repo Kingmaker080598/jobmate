@@ -485,7 +485,6 @@ function FeatureCard({ icon, title, desc, href, comingSoon }) {
         <Link href={href}>
           <div className="cursor-pointer futuristic-card">
             {comingSoon && <div className="futuristic-coming-soon">Coming Soon</div>}
-            }
             <div className="mb-4">{icon}</div>
             <Typography variant="h6" className="futuristic-text mb-1 font-semibold">{title}</Typography>
             <Typography className="futuristic-subtext text-sm leading-snug font-medium">{desc}</Typography>
@@ -494,7 +493,6 @@ function FeatureCard({ icon, title, desc, href, comingSoon }) {
       ) : (
         <div className="futuristic-card">
           {comingSoon && <div className="futuristic-coming-soon">Coming Soon</div>}
-          }
           <div className="mb-4">{icon}</div>
           <Typography variant="h6" className="futuristic-text mb-1 font-semibold">{title}</Typography>
           <Typography className="futuristic-subtext text-sm leading-snug font-medium">{desc}</Typography>
