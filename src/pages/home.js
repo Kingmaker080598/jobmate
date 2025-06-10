@@ -2,11 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
-// import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
-import { User, Clock, ClipboardList, Sparkles, FileText, Search, Settings, Wand } from 'lucide-react';
+import { 
+  User, 
+  Clock, 
+  ClipboardList, 
+  Sparkles, 
+  FileText, 
+  Search, 
+  Settings, 
+  Wand,
+  Target,
+  BarChart3,
+  TrendingUp,
+  Zap,
+  Bot,
+  Brain,
+  Rocket
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import ChatIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import { Typography, Button as MuiButton, LinearProgress } from '@mui/material';
@@ -256,16 +271,14 @@ export default function HomePage() {
               }}
             >
              Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]} 👋
-
             </Typography>
             <Typography className="futuristic-subtext mt-4 text-2xl w-full text-center">
-
-              Your exclusive AI-powered career companion, crafted to elevate your job search with sophistication.
+              Your AI-powered job application platform - now with advanced automation features
             </Typography>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-6">
-              <Link href="/profile">
+              <Link href="/jobs">
                 <MuiButton className="futuristic-button px-8 py-3">
-                  Elevate Your Profile
+                  Start Job Hunting
                 </MuiButton>
               </Link>
             </motion.div>
@@ -279,24 +292,23 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
           >
             <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' } }}>
-            Let&apos;s Get You Set Up
-          </Typography>
-
+              Your Job Search Progress
+            </Typography>
             <div className="futuristic-card p-6">
               <Typography variant="h6" className="futuristic-subtext mb-2 font-semibold">
-                Complete these steps to unlock JobMate&apos;s full potential:
+                Complete these steps to maximize your success:
               </Typography>
               <LinearProgress
                 variant="determinate"
-                value={66}
+                value={80}
                 className="futuristic-progress"
                 sx={{ height: '10px', borderRadius: '6px' }}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
                 <StepCard label="Complete Profile" done={true} />
-                <StepCard label="Download Chrome Extension" done={true} />
-                <StepCard label="Auto-Fill Application" done={false} />
+                <StepCard label="Import Jobs" done={true} />
+                <StepCard label="Setup Auto-Apply" done={true} />
+                <StepCard label="Track Applications" done={false} />
               </div>
             </div>
           </motion.div>
@@ -318,27 +330,44 @@ export default function HomePage() {
                 textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
               }}
             >
-              Explore JobMate Features
+              Core Features
             </Typography>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
+              <FeatureCard
+                href="/jobs"
+                icon={<Search className="w-6 h-6 futuristic-icon" />}
+                title="Job Search & Import"
+                desc="Search and import jobs from LinkedIn, Indeed, Glassdoor, and more platforms automatically."
+              />
+              <FeatureCard
+                href="/auto-apply"
+                icon={<Target className="w-6 h-6 futuristic-icon" />}
+                title="Auto-Apply System"
+                desc="Let AI apply to jobs automatically with your customized profile and preferences."
+              />
+              <FeatureCard
+                href="/applications"
+                icon={<BarChart3 className="w-6 h-6 futuristic-icon" />}
+                title="Application Tracker"
+                desc="Track your applications through the entire hiring process with Kanban boards."
+              />
               <FeatureCard
                 href="/profile"
                 icon={<User className="w-6 h-6 futuristic-icon" />}
-                title="Manage Profile"
-                desc="Upload your master resume and manage your preferences with ease."
+                title="Smart Profile"
+                desc="Manage your profile with auto-fill capabilities for faster applications."
               />
               <FeatureCard
                 href="/history"
                 icon={<Clock className="w-6 h-6 futuristic-icon" />}
                 title="Resume History"
-                desc="Browse and download your past resume versions effortlessly."
+                desc="Access all your tailored resumes and application history in one place."
               />
               <FeatureCard
                 href="/profile#auto-fill"
                 icon={<ClipboardList className="w-6 h-6 futuristic-icon" />}
-                title="Auto-Fill Applications"
-                desc="Fill job applications quickly with stored details."
+                title="Auto-Fill Forms"
+                desc="Automatically fill job application forms with your stored information."
               />
             </div>
           </motion.div>
@@ -360,37 +389,43 @@ export default function HomePage() {
                 textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
               }}
             >
-              Coming Soon
+              Advanced AI Features
             </Typography>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
               <FeatureCard
                 icon={<Sparkles className="w-6 h-6 futuristic-icon" />}
-                title="Tailor Resume"
-                desc="Generate resumes tailored to job descriptions using AI. Expected in 3 days."
+                title="AI Resume Tailoring"
+                desc="Generate perfectly tailored resumes for each job using advanced AI algorithms."
                 comingSoon={true}
               />
               <FeatureCard
-                icon={<FileText className="w-6 h-6 futuristic-icon" />}
-                title="Smart Suggestions"
-                desc="Get live recommendations from our AI panel. Launching this week."
+                icon={<Brain className="w-6 h-6 futuristic-icon" />}
+                title="Smart Job Matching"
+                desc="AI-powered job recommendations based on your skills and preferences."
+                comingSoon={true}
+              />
+              <FeatureCard
+                icon={<Bot className="w-6 h-6 futuristic-icon" />}
+                title="Interview Prep AI"
+                desc="Practice interviews with AI and get personalized feedback and tips."
                 comingSoon={true}
               />
               <FeatureCard
                 icon={<Wand className="w-6 h-6 futuristic-icon" />}
-                title="AI-Generated Cover Letters"
-                desc="Instantly generate ATS-friendly, job-specific cover letters. Coming next!"
+                title="AI Cover Letters"
+                desc="Generate compelling, job-specific cover letters instantly with AI."
                 comingSoon={true}
               />
               <FeatureCard
-                icon={<Search className="w-6 h-6 futuristic-icon" />}
-                title="Job Search Integration"
-                desc="Connect with job boards and track openings within JobMate."
+                icon={<TrendingUp className="w-6 h-6 futuristic-icon" />}
+                title="Market Analytics"
+                desc="Get insights on salary trends, job market data, and career opportunities."
                 comingSoon={true}
               />
               <FeatureCard
-                icon={<Settings className="w-6 h-6 futuristic-icon" />}
-                title="Auto Apply Bots"
-                desc="Deploy smart bots to apply on your behalf with tailored resumes."
+                icon={<Rocket className="w-6 h-6 futuristic-icon" />}
+                title="Career Acceleration"
+                desc="AI-powered career path recommendations and skill development plans."
                 comingSoon={true}
               />
             </div>
@@ -398,7 +433,7 @@ export default function HomePage() {
         </div>
 
         <footer className="text-center text-xs futuristic-footer-text py-8 space-y-2">
-          <p>© {new Date().getFullYear()} JobMate. Built for job seekers, powered by AI.</p>
+          <p>© {new Date().getFullYear()} JobMate. The future of job searching is here.</p>
           <div className="flex justify-center gap-4 text-sm">
             <Link href="/about" className="futuristic-footer-link">About</Link>
             <Link href="/contact" className="futuristic-footer-link">Contact</Link>
@@ -420,17 +455,17 @@ export default function HomePage() {
 
         {showChat && (
           <div className="fixed bottom-20 right-6 z-40 w-80 futuristic-chat rounded-xl shadow-xl overflow-hidden">
-            <div className="futuristic-chat-header p-3 font-semibold">💬 Ask JobMate</div>
+            <div className="futuristic-chat-header p-3 font-semibold">💬 JobMate Assistant</div>
             <div className="p-4 text-sm space-y-2 futuristic-chat-text">
-              <p><strong>Q:</strong> How do I manage my profile?</p>
-              <p><strong>A:</strong> Head to your profile page to upload your resume and set preferences.</p>
+              <p><strong>Q:</strong> How do I start auto-applying?</p>
+              <p><strong>A:</strong> Go to Auto-Apply page, enable the feature, and set your preferences.</p>
               <hr className="my-2 futuristic-chat-divider" />
-              <p><strong>Q:</strong> Where is my last resume?</p>
-              <p><strong>A:</strong> Check the &apos;Resume History&apos; page for your previous downloads.</p>
+              <p><strong>Q:</strong> Can I import jobs from multiple sites?</p>
+              <p><strong>A:</strong> Yes! Use the Job Importer to pull from LinkedIn, Indeed, Glassdoor, and more.</p>
               <hr className="my-2 futuristic-chat-divider" />
-              <p><strong>Q:</strong> What&apos;s coming next?</p>
-              <p><strong>A:</strong> Tailor Resume, Smart Suggestions, AI Cover Letters, and more!</p>
-              <p className="text-center mt-3 text-xs opacity-70">Stay tuned for premium updates...</p>
+              <p><strong>Q:</strong> How do I track my applications?</p>
+              <p><strong>A:</strong> Use the Application Tracker with Kanban boards to manage your pipeline.</p>
+              <p className="text-center mt-3 text-xs opacity-70">Your AI-powered job search companion</p>
             </div>
           </div>
         )}

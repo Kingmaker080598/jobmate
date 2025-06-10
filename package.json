@@ -28,7 +28,16 @@
     "openai": "^4.93.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-draggable": "^4.4.6"
+    "react-draggable": "^4.4.6",
+    "puppeteer": "^23.0.0",
+    "cheerio": "^1.0.0",
+    "axios": "^1.7.0",
+    "node-cron": "^3.0.3",
+    "react-beautiful-dnd": "^13.1.1",
+    "recharts": "^2.12.0",
+    "react-hot-toast": "^2.4.1",
+    "react-select": "^5.8.0",
+    "date-fns": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
