@@ -37,7 +37,7 @@ Return a JSON response with:
 }`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 1500
@@ -66,9 +66,16 @@ Return a JSON response with:
   } catch (error) {
     console.error('Job analysis error:', error);
     
-    // Fallback analysis
+    // Enhanced fallback analysis for quota/API errors
     const keywords = extractKeywordsFromText(jobDescription);
     const suggestions = generateBasicSuggestions(toneStyle);
+    
+    // Check if it's a quota error and provide appropriate response
+    if (error.status === 429) {
+      console.warn('OpenAI quota exceeded, using fallback analysis');
+    } else if (error.status === 404) {
+      console.warn('OpenAI model not accessible, using fallback analysis');
+    }
     
     res.status(200).json({
       keywords,
@@ -76,8 +83,9 @@ Return a JSON response with:
       suggestions,
       requiredSkills: keywords.slice(0, 8),
       preferredQualifications: [],
-      companyInfo: "Analysis unavailable",
-      roleLevel: "mid"
+      companyInfo: "Analysis completed with fallback method",
+      roleLevel: "mid",
+      fallbackUsed: true
     });
   }
 }
