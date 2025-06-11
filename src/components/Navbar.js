@@ -11,7 +11,10 @@ import {
   BarChart3, 
   User, 
   Clock,
-  Settings
+  Settings,
+  Sparkles,
+  Globe,
+  Zap
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -46,6 +49,9 @@ export default function Navbar() {
   const navItems = [
     { href: '/home', icon: Home, label: 'Dashboard' },
     { href: '/jobs', icon: Search, label: 'Jobs' },
+    { href: '/ai-tailoring', icon: Sparkles, label: 'AI Tailoring' },
+    { href: '/scraper', icon: Globe, label: 'Scraper' },
+    { href: '/autofill', icon: Zap, label: 'Autofill' },
     { href: '/auto-apply', icon: Target, label: 'Auto-Apply' },
     { href: '/applications', icon: BarChart3, label: 'Applications' },
     { href: '/profile', icon: User, label: 'Profile' },

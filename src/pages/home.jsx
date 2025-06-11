@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
+import AIAssistantChat from '@/components/AIAssistantChat';
 import Link from 'next/link';
 import { 
   User, 
@@ -20,10 +21,11 @@ import {
   Zap,
   Bot,
   Brain,
-  Rocket
+  Rocket,
+  Globe,
+  MessageCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import ChatIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import { Typography, Button as MuiButton, LinearProgress } from '@mui/material';
 
 // Premium Luxurious Futuristic CSS
@@ -273,12 +275,12 @@ export default function HomePage() {
              Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]} 👋
             </Typography>
             <Typography className="futuristic-subtext mt-4 text-2xl w-full text-center">
-              Your AI-powered job application platform - now with advanced automation features
+              Your AI-powered job application copilot - ready to accelerate your career
             </Typography>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-6">
-              <Link href="/jobs">
+              <Link href="/ai-tailoring">
                 <MuiButton className="futuristic-button px-8 py-3">
-                  Start Job Hunting
+                  Start AI Tailoring
                 </MuiButton>
               </Link>
             </motion.div>
@@ -306,7 +308,7 @@ export default function HomePage() {
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
                 <StepCard label="Complete Profile" done={true} />
-                <StepCard label="Import Jobs" done={true} />
+                <StepCard label="AI Resume Tailoring" done={true} />
                 <StepCard label="Setup Auto-Apply" done={true} />
                 <StepCard label="Track Applications" done={false} />
               </div>
@@ -330,9 +332,27 @@ export default function HomePage() {
                 textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
               }}
             >
-              Core Features
+              AI-Powered Core Features
             </Typography>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
+              <FeatureCard
+                href="/ai-tailoring"
+                icon={<Sparkles className="w-6 h-6 futuristic-icon" />}
+                title="AI Resume Tailoring"
+                desc="Generate perfectly tailored resumes for each job using advanced AI algorithms and keyword optimization."
+              />
+              <FeatureCard
+                href="/scraper"
+                icon={<Globe className="w-6 h-6 futuristic-icon" />}
+                title="Smart Job Scraper"
+                desc="Extract job details from any posting with AI-powered precision. Works on LinkedIn, Indeed, and more."
+              />
+              <FeatureCard
+                href="/autofill"
+                icon={<Zap className="w-6 h-6 futuristic-icon" />}
+                title="Smart Autofill Engine"
+                desc="Intelligent form filling that adapts to any job application platform with 95% accuracy."
+              />
               <FeatureCard
                 href="/jobs"
                 icon={<Search className="w-6 h-6 futuristic-icon" />}
@@ -349,25 +369,7 @@ export default function HomePage() {
                 href="/applications"
                 icon={<BarChart3 className="w-6 h-6 futuristic-icon" />}
                 title="Application Tracker"
-                desc="Track your applications through the entire hiring process with Kanban boards."
-              />
-              <FeatureCard
-                href="/profile"
-                icon={<User className="w-6 h-6 futuristic-icon" />}
-                title="Smart Profile"
-                desc="Manage your profile with auto-fill capabilities for faster applications."
-              />
-              <FeatureCard
-                href="/history"
-                icon={<Clock className="w-6 h-6 futuristic-icon" />}
-                title="Resume History"
-                desc="Access all your tailored resumes and application history in one place."
-              />
-              <FeatureCard
-                href="/profile#auto-fill"
-                icon={<ClipboardList className="w-6 h-6 futuristic-icon" />}
-                title="Auto-Fill Forms"
-                desc="Automatically fill job application forms with your stored information."
+                desc="Track your applications through the entire hiring process with intelligent insights."
               />
             </div>
           </motion.div>
@@ -392,12 +394,6 @@ export default function HomePage() {
               Advanced AI Features
             </Typography>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-              <FeatureCard
-                icon={<Sparkles className="w-6 h-6 futuristic-icon" />}
-                title="AI Resume Tailoring"
-                desc="Generate perfectly tailored resumes for each job using advanced AI algorithms."
-                comingSoon={true}
-              />
               <FeatureCard
                 icon={<Brain className="w-6 h-6 futuristic-icon" />}
                 title="Smart Job Matching"
@@ -428,6 +424,12 @@ export default function HomePage() {
                 desc="AI-powered career path recommendations and skill development plans."
                 comingSoon={true}
               />
+              <FeatureCard
+                href="/profile"
+                icon={<User className="w-6 h-6 futuristic-icon" />}
+                title="Smart Profile Manager"
+                desc="Manage your profile with auto-fill capabilities for faster applications."
+              />
             </div>
           </motion.div>
         </div>
@@ -442,33 +444,26 @@ export default function HomePage() {
           </div>
         </footer>
 
+        {/* AI Assistant Chat Button */}
         <motion.button
           onClick={() => setShowChat(!showChat)}
-         className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 p-2 sm:p-3"
+          className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 p-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          animate={{ boxShadow: ['0 0 10px rgba(255, 215, 0, 0.5)', '0 0 20px rgba(255, 215, 0, 0.8)', '0 0 10px rgba(255, 215, 0, 0.5)'] }}
+          animate={{ 
+            boxShadow: [
+              '0 0 20px rgba(147, 51, 234, 0.5)', 
+              '0 0 30px rgba(59, 130, 246, 0.8)', 
+              '0 0 20px rgba(147, 51, 234, 0.5)'
+            ] 
+          }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          <ChatIcon className="w-6 h-6" />
+          <MessageCircle className="w-6 h-6" />
         </motion.button>
 
-        {showChat && (
-          <div className="fixed bottom-20 right-6 z-40 w-80 futuristic-chat rounded-xl shadow-xl overflow-hidden">
-            <div className="futuristic-chat-header p-3 font-semibold">💬 JobMate Assistant</div>
-            <div className="p-4 text-sm space-y-2 futuristic-chat-text">
-              <p><strong>Q:</strong> How do I start auto-applying?</p>
-              <p><strong>A:</strong> Go to Auto-Apply page, enable the feature, and set your preferences.</p>
-              <hr className="my-2 futuristic-chat-divider" />
-              <p><strong>Q:</strong> Can I import jobs from multiple sites?</p>
-              <p><strong>A:</strong> Yes! Use the Job Importer to pull from LinkedIn, Indeed, Glassdoor, and more.</p>
-              <hr className="my-2 futuristic-chat-divider" />
-              <p><strong>Q:</strong> How do I track my applications?</p>
-              <p><strong>A:</strong> Use the Application Tracker with Kanban boards to manage your pipeline.</p>
-              <p className="text-center mt-3 text-xs opacity-70">Your AI-powered job search companion</p>
-            </div>
-          </div>
-        )}
+        {/* AI Assistant Chat */}
+        <AIAssistantChat isOpen={showChat} onClose={() => setShowChat(false)} />
       </div>
     </>
   );
