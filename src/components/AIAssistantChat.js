@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
-  Bot, 
   User, 
   Sparkles, 
   X, 
@@ -42,7 +41,7 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     if (isOpen && messages.length === 0) {
       initializeChat();
     }
-  }, [isOpen, messages.length, initializeChat]);
+  }, [isOpen, messages.length]);
 
   useEffect(() => {
     scrollToBottom();
