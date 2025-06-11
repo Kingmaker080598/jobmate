@@ -75,6 +75,8 @@ Return a JSON response with:
       console.warn('OpenAI quota exceeded, using fallback analysis');
     } else if (error.status === 404) {
       console.warn('OpenAI model not accessible, using fallback analysis');
+    } else {
+      console.warn('OpenAI connection error, using fallback analysis');
     }
     
     res.status(200).json({
