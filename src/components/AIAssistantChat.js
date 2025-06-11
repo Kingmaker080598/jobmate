@@ -11,7 +11,9 @@ import {
   Lightbulb,
   Target,
   FileText,
-  TrendingUp
+  TrendingUp,
+  Brain,
+  Zap
 } from 'lucide-react';
 import { Typography, TextField, Button, Chip } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -24,10 +26,10 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
   const messagesEndRef = useRef(null);
 
   const quickActions = [
-    { icon: FileText, label: 'Tailor my resume', action: 'tailor_resume' },
-    { icon: Target, label: 'Find jobs for me', action: 'find_jobs' },
-    { icon: TrendingUp, label: 'Improve my profile', action: 'improve_profile' },
-    { icon: Lightbulb, label: 'Career advice', action: 'career_advice' }
+    { icon: FileText, label: 'Tailor my resume', action: 'tailor_resume', gradient: 'from-blue-500 to-cyan-500' },
+    { icon: Target, label: 'Find jobs for me', action: 'find_jobs', gradient: 'from-green-500 to-teal-500' },
+    { icon: TrendingUp, label: 'Improve my profile', action: 'improve_profile', gradient: 'from-purple-500 to-pink-500' },
+    { icon: Lightbulb, label: 'Career advice', action: 'career_advice', gradient: 'from-orange-500 to-red-500' }
   ];
 
   useEffect(() => {
@@ -68,7 +70,6 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate AI response
     setTimeout(() => {
       const botResponse = generateAIResponse(content);
       setMessages(prev => [...prev, botResponse]);
@@ -78,11 +79,11 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
 
   const generateAIResponse = (userInput) => {
     const responses = {
-      tailor_resume: "🎯 Great choice! I can help you tailor your resume for specific jobs. Do you have a job description you'd like me to analyze? You can paste it here or use our AI Tailoring tool for a more detailed experience.",
-      find_jobs: "🔍 I'd love to help you find the perfect opportunities! Based on your profile, I can search for roles that match your skills. What type of position are you looking for? (e.g., 'Software Engineer', 'Marketing Manager', etc.)",
-      improve_profile: "📈 Let's optimize your profile! I can help you enhance your resume, improve your LinkedIn presence, and make you more attractive to employers. What area would you like to focus on first?",
-      career_advice: "💡 I'm here to guide your career journey! Whether you need help with interview prep, salary negotiation, or career transitions, I've got you covered. What specific advice are you looking for?",
-      default: "I understand you're looking for help with your job search. I can assist with resume tailoring, job searching, profile optimization, and career advice. What would you like to focus on?"
+      tailor_resume: "🎯 Perfect! I can help you create a tailored resume that matches any job perfectly. Do you have a specific job description you'd like me to analyze? You can paste it here or use our AI Tailoring tool for the full experience with visual comparisons and keyword optimization.",
+      find_jobs: "🔍 I'd love to help you discover amazing opportunities! Based on your profile, I can search for roles that match your skills perfectly. What type of position are you looking for? (e.g., 'Software Engineer', 'Marketing Manager', 'Data Scientist', etc.)",
+      improve_profile: "📈 Let's supercharge your profile! I can help you optimize your resume, enhance your LinkedIn presence, and make you irresistible to employers. What area would you like to focus on first - resume content, keywords, or overall presentation?",
+      career_advice: "💡 I'm here to guide your career journey! Whether you need help with interview prep, salary negotiation, career transitions, or industry insights, I've got you covered. What specific advice are you looking for?",
+      default: "I understand you're looking for help with your job search. I can assist with resume tailoring, job searching, profile optimization, and career advice. I'm powered by advanced AI to give you personalized, actionable guidance. What would you like to focus on?"
     };
 
     const lowerInput = userInput.toLowerCase();
@@ -110,8 +111,8 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     const actionMessages = {
       tailor_resume: "I want to tailor my resume for a specific job",
       find_jobs: "Help me find relevant job opportunities",
-      improve_profile: "I want to improve my profile",
-      career_advice: "I need career advice"
+      improve_profile: "I want to improve my profile and increase my chances",
+      career_advice: "I need personalized career advice and guidance"
     };
 
     handleSendMessage(actionMessages[action]);
@@ -121,25 +122,28 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-6`}
     >
-      <div className={`flex items-start gap-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-          message.type === 'user' 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
-        }`}>
-          {message.type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-        </div>
-        <div className={`rounded-lg p-3 ${
+      <div className={`flex items-start gap-4 max-w-[85%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+        <motion.div 
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            message.type === 'user' 
+              ? 'bg-gradient-to-r from-blue-500 to-cyan-500' 
+              : 'bg-gradient-to-r from-purple-500 to-pink-500'
+          }`}
+          whileHover={{ scale: 1.1 }}
+        >
+          {message.type === 'user' ? <User className="w-5 h-5 text-white" /> : <Brain className="w-5 h-5 text-white" />}
+        </motion.div>
+        <div className={`glass-card p-4 ${
           message.type === 'user'
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 text-gray-800'
+            ? 'border-blue-400/30 bg-blue-500/10'
+            : 'border-purple-400/30 bg-purple-500/10'
         }`}>
-          <Typography className="text-sm">{message.content}</Typography>
-          <Typography className="text-xs opacity-70 mt-1">
+          <p className="text-gray-200 leading-relaxed">{message.content}</p>
+          <p className="text-xs text-gray-500 mt-2 font-mono">
             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Typography>
+          </p>
         </div>
       </div>
     </motion.div>
@@ -149,26 +153,33 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="fixed bottom-4 right-4 w-96 h-[600px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-50"
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+      className="fixed bottom-4 right-4 w-96 h-[700px] glass-card border border-cyan-400/30 flex flex-col z-50 hover-lift"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-xl flex justify-between items-center">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-t-2xl flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Sparkles className="w-6 h-6" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Sparkles className="w-6 h-6 text-white" />
+          </motion.div>
           <div>
-            <Typography className="font-semibold">JobMate AI</Typography>
-            <Typography className="text-xs opacity-90">Your Career Copilot</Typography>
+            <h3 className="font-bold text-white cyber-heading">JobMate AI</h3>
+            <p className="text-xs text-white/80 font-mono">Your Career Copilot</p>
           </div>
         </div>
-        <button
+        <motion.button
           onClick={onClose}
-          className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
+          className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
           <X className="w-5 h-5" />
-        </button>
+        </motion.button>
       </div>
 
       {/* Messages */}
@@ -185,15 +196,15 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
             animate={{ opacity: 1 }}
             className="flex justify-start"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white flex items-center justify-center">
-                <Bot className="w-4 h-4" />
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                <Brain className="w-5 h-5 text-white" />
               </div>
-              <div className="bg-gray-100 rounded-lg p-3">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <div className="glass-card p-4 border-purple-400/30 bg-purple-500/10">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                 </div>
               </div>
             </div>
@@ -204,43 +215,46 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
 
       {/* Quick Actions */}
       {messages.length <= 1 && (
-        <div className="p-4 border-t border-gray-200">
-          <Typography className="text-sm text-gray-600 mb-3">Quick actions:</Typography>
+        <div className="p-4 border-t border-white/10">
+          <p className="text-sm text-gray-400 mb-4 font-semibold">Quick Actions:</p>
           <div className="grid grid-cols-2 gap-2">
             {quickActions.map((action) => (
-              <button
+              <motion.button
                 key={action.action}
                 onClick={() => handleQuickAction(action.action)}
-                className="flex items-center gap-2 p-2 text-xs bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                className="glass-card p-3 text-xs hover:border-cyan-400/50 transition-colors group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <action.icon className="w-3 h-3 text-purple-600" />
-                <span>{action.label}</span>
-              </button>
+                <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${action.gradient} mb-2 mx-auto flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <action.icon className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-gray-300 group-hover:text-white transition-colors">{action.label}</span>
+              </motion.button>
             ))}
           </div>
         </div>
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex gap-2">
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Ask me anything about your job search..."
+      <div className="p-4 border-t border-white/10">
+        <div className="flex gap-3">
+          <input
+            className="cyber-input flex-1 text-sm"
+            placeholder="Ask me anything about your career..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            variant="outlined"
           />
-          <Button
-            variant="contained"
+          <motion.button
+            className="cyber-button px-4 py-2"
             onClick={() => handleSendMessage()}
             disabled={!inputMessage.trim() || isTyping}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <Send className="w-4 h-4" />
-          </Button>
+          </motion.button>
         </div>
       </div>
     </motion.div>

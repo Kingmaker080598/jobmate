@@ -1,510 +1,297 @@
-// pages/home.js
-
 import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useRouter } from 'next/router';
-import Navbar from '@/components/Navbar';
+import CyberNavbar from '@/components/CyberNavbar';
+import FuturisticLayout from '@/components/FuturisticLayout';
 import AIAssistantChat from '@/components/AIAssistantChat';
 import Link from 'next/link';
-import { 
-  User, 
-  Clock, 
-  ClipboardList, 
-  Sparkles, 
-  FileText, 
-  Search, 
-  Settings, 
-  Wand,
-  Target,
-  BarChart3,
-  TrendingUp,
-  Zap,
-  Bot,
-  Brain,
-  Rocket,
-  Globe,
-  MessageCircle
-} from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Typography, Button as MuiButton, LinearProgress } from '@mui/material';
-
-// Premium Luxurious Futuristic CSS
-const futuristicStyles = `
-  .futuristic-bg {
-    background: linear-gradient(135deg, #0d0221 0%, #1a0b4e 50%, #2a1a6e 100%);
-    min-height: 100vh;
-    position: relative;
-    overflow: hidden;
-    padding: 16px;
-  }
-  .futuristic-bg::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent 70%);
-    animation: glow 12s infinite ease-in-out;
-    z-index: 0;
-  }
-  .futuristic-bg::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(212, 181, 241, 0), rgba(255, 215, 0, 0.1));
-    opacity: 0.3;
-    z-index: 0;
-  }
-  .futuristic-starfield {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="rgba(255, 215, 0, 0.8)"/></svg>');
-    background-size: 4px;
-    animation: shimmer 60s linear infinite;
-    z-index: 0;
-  }
-  @keyframes glow {
-    0%, 100% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.1); }
-  }
-  @keyframes shimmer {
-    0% { background-position: 0 0; }
-    100% { background-position: 1000px 1000px; }
-  }
-  .futuristic-container {
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-    padding: 6rem 1.5rem;
-  }
-  .futuristic-header {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid transparent;
-    border-image: linear-gradient(90deg, #9333ea, #FFD700) 1;
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    padding: 32px;
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
-    animation: pulse-header 6s infinite ease-in-out;
-  }
-  @keyframes pulse-header {
-    0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.5); }
-    50% { box-shadow: 0 0 35px rgba(147, 51, 234, 0.7); }
-  }
-  .futuristic-header-text {
-    color:rgb(219, 212, 212);
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 12px rgba(74, 114, 143, 0.7);
-    animation: glow-text 3s ease-in-out infinite;
-  }
-  @keyframes glow-text {
-    0%, 100% { text-shadow: 0 0 12px rgba(255, 215, 0, 0.7); }
-    50% { text-shadow: 0 0 18px rgba(147, 51, 234, 0.9); }
-  }
-  .futuristic-subtext {
-    color:rgb(119, 26, 26);
-    text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
-    font-family: 'Roboto', sans-serif;
-  }
-  .futuristic-card {
-    background: rgba(229, 231, 235, 0.9);
-    border: 2px solid transparent;
-    border-image: linear-gradient(90deg, #9333ea, #FFD700) 1;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    padding: 24px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .futuristic-card:hover {
-    transform: translateY(-4px) rotate(1deg);
-    box-shadow: 0 6px 30px rgba(255, 215, 0, 0.6);
-  }
-  .futuristic-coming-soon {
-    background: linear-gradient(90deg, #FFD700, #DAA520);
-    color: #1e3a8a;
-    text-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
-    border-radius: 12px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    display: inline-block;
-    margin-bottom: 8px;
-  }
-  .futuristic-icon {
-    color:rgb(48, 107, 94);
-    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
-    animation: pulse-icon 2s infinite ease-in-out;
-  }
-  @keyframes pulse-icon {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-  }
-  .futuristic-text {
-    color: #1e3a8a;
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: none;
-  }
-  .futuristic-footer-text {
-    color: #F5F5F5;
-    text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
-    font-family: 'Roboto', sans-serif;
-  }
-  .futuristic-footer-link {
-    color: #F5F5F5;
-    text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
-    font-family: 'Roboto', sans-serif;
-    transition: color 0.3s ease;
-  }
-  .futuristic-footer-link:hover {
-    color: #FFD700;
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-  }
-  .futuristic-button {
-    background: linear-gradient(90deg, #FFD700, #DAA520);
-    border: none;
-    border-radius: 8px;
-    padding: 12px;
-    color: #1e3a8a;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-family: 'Orbitron', sans-serif;
-    transition: all 0.3s ease;
-  }
-  .futuristic-button:hover {
-    background: linear-gradient(90deg, #DAA520, #FFD700);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-  }
-  .futuristic-chat {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid transparent;
-    border-image: linear-gradient(90deg, #9333ea, #FFD700) 1;
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  }
-  .futuristic-chat-header {
-    background: linear-gradient(90deg, #FFD700, #DAA520);
-    color: #1e3a8a;
-    text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
-    font-family: 'Orbitron', sans-serif;
-  }
-  .futuristic-chat-text {
-    color: #F5F5F5;
-    font-family: 'Roboto', sans-serif;
-  }
-  .futuristic-chat-divider {
-    border-color: rgba(255, 215, 0, 0.2);
-  }
-  .futuristic-progress {
-    background: rgba(255, 215, 0, 0.1);
-    border-radius: 6px;
-    height: 10px;
-  }
-  .futuristic-progress .MuiLinearProgress-bar {
-    background: linear-gradient(90deg, #FFD700, #DAA520);
-  }
-  .futuristic-step-card {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.2);
-    border-radius: 8px;
-    padding: 16px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .futuristic-step-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-  }
-  .futuristic-step-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: rgba(255, 215, 0, 0.2);
-  }
-  .futuristic-step-icon-done {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #FFD700;
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-  }
-`;
+import { 
+  Sparkles, 
+  Target, 
+  BarChart3, 
+  Globe, 
+  Zap, 
+  Brain, 
+  Rocket, 
+  Shield, 
+  TrendingUp,
+  MessageCircle,
+  ChevronRight,
+  Activity,
+  Clock,
+  CheckCircle2,
+  ArrowUpRight
+} from 'lucide-react';
 
 export default function HomePage() {
   const { user, profile } = useUser();
   const [showChat, setShowChat] = useState(false);
+  const [stats, setStats] = useState({
+    applicationsToday: 12,
+    matchScore: 94,
+    jobsScraped: 156,
+    profileViews: 89
+  });
   const router = useRouter();
 
   useEffect(() => {
     if (!user) router.push('/login');
   }, [user, router]);
 
-  if (!user) return <Typography className="p-6 futuristic-text">Loading your AI dashboard...</Typography>;
+  if (!user) {
+    return (
+      <FuturisticLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="glass-card p-8 text-center">
+            <div className="loading-pulse w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full mx-auto mb-4" />
+            <p className="neon-text">Initializing AI Dashboard...</p>
+          </div>
+        </div>
+      </FuturisticLayout>
+    );
+  }
+
+  const quickActions = [
+    {
+      title: 'AI Resume Tailoring',
+      description: 'Generate perfect resumes with AI precision',
+      icon: Sparkles,
+      href: '/ai-tailoring',
+      gradient: 'from-purple-500 to-pink-500',
+      stats: '94% Match Rate'
+    },
+    {
+      title: 'Smart Job Scraper',
+      description: 'Extract job details from any platform',
+      icon: Globe,
+      href: '/scraper',
+      gradient: 'from-green-500 to-teal-500',
+      stats: '156 Jobs Found'
+    },
+    {
+      title: 'Auto-Fill Engine',
+      description: 'Fill applications with 95% accuracy',
+      icon: Zap,
+      href: '/autofill',
+      gradient: 'from-yellow-500 to-orange-500',
+      stats: '12 Forms Today'
+    },
+    {
+      title: 'Application Tracker',
+      description: 'Monitor your job application pipeline',
+      icon: BarChart3,
+      href: '/applications',
+      gradient: 'from-blue-500 to-cyan-500',
+      stats: '8 In Progress'
+    }
+  ];
+
+  const achievements = [
+    { label: 'Resume Optimized', value: '100%', icon: CheckCircle2, color: 'green' },
+    { label: 'Profile Complete', value: '95%', icon: Activity, color: 'blue' },
+    { label: 'AI Training', value: '87%', icon: Brain, color: 'purple' },
+    { label: 'Success Rate', value: '94%', icon: TrendingUp, color: 'cyan' }
+  ];
 
   return (
-    <>
-      <style>{futuristicStyles}</style>
-      <Navbar />
-      <div className="futuristic-bg">
-        <div className="futuristic-starfield" />
-        <div className="futuristic-container">
-          <motion.div
-            className="futuristic-header text-center mb-20"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Typography
-              variant="h1"
-              className="futuristic-header-text font-bold"
-              style={{
-                background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-             Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]} 👋
-            </Typography>
-            <Typography className="futuristic-subtext mt-4 text-2xl w-full text-center">
-              Your AI-powered job application copilot - ready to accelerate your career
-            </Typography>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-6">
-              <Link href="/ai-tailoring">
-                <MuiButton className="futuristic-button px-8 py-3">
-                  Start AI Tailoring
-                </MuiButton>
-              </Link>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            className="mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' } }}>
-              Your Job Search Progress
-            </Typography>
-            <div className="futuristic-card p-6">
-              <Typography variant="h6" className="futuristic-subtext mb-2 font-semibold">
-                Complete these steps to maximize your success:
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={80}
-                className="futuristic-progress"
-                sx={{ height: '10px', borderRadius: '6px' }}
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
-                <StepCard label="Complete Profile" done={true} />
-                <StepCard label="AI Resume Tailoring" done={true} />
-                <StepCard label="Setup Auto-Apply" done={true} />
-                <StepCard label="Track Applications" done={false} />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Typography
-              variant="h4"
-              className="futuristic-text font-bold text-center mb-10"
-              style={{
-                background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
-              }}
-            >
-              AI-Powered Core Features
-            </Typography>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 px-2 sm:px-4">
-              <FeatureCard
-                href="/ai-tailoring"
-                icon={<Sparkles className="w-6 h-6 futuristic-icon" />}
-                title="AI Resume Tailoring"
-                desc="Generate perfectly tailored resumes for each job using advanced AI algorithms and keyword optimization."
-              />
-              <FeatureCard
-                href="/scraper"
-                icon={<Globe className="w-6 h-6 futuristic-icon" />}
-                title="Smart Job Scraper"
-                desc="Extract job details from any posting with AI-powered precision. Works on LinkedIn, Indeed, and more."
-              />
-              <FeatureCard
-                href="/autofill"
-                icon={<Zap className="w-6 h-6 futuristic-icon" />}
-                title="Smart Autofill Engine"
-                desc="Intelligent form filling that adapts to any job application platform with 95% accuracy."
-              />
-              <FeatureCard
-                href="/jobs"
-                icon={<Search className="w-6 h-6 futuristic-icon" />}
-                title="Job Search & Import"
-                desc="Search and import jobs from LinkedIn, Indeed, Glassdoor, and more platforms automatically."
-              />
-              <FeatureCard
-                href="/auto-apply"
-                icon={<Target className="w-6 h-6 futuristic-icon" />}
-                title="Auto-Apply System"
-                desc="Let AI apply to jobs automatically with your customized profile and preferences."
-              />
-              <FeatureCard
-                href="/applications"
-                icon={<BarChart3 className="w-6 h-6 futuristic-icon" />}
-                title="Application Tracker"
-                desc="Track your applications through the entire hiring process with intelligent insights."
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Typography
-              variant="h4"
-              className="futuristic-text font-bold text-center mb-10"
-              style={{
-                background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
-              }}
-            >
-              Advanced AI Features
-            </Typography>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-              <FeatureCard
-                icon={<Brain className="w-6 h-6 futuristic-icon" />}
-                title="Smart Job Matching"
-                desc="AI-powered job recommendations based on your skills and preferences."
-                comingSoon={true}
-              />
-              <FeatureCard
-                icon={<Bot className="w-6 h-6 futuristic-icon" />}
-                title="Interview Prep AI"
-                desc="Practice interviews with AI and get personalized feedback and tips."
-                comingSoon={true}
-              />
-              <FeatureCard
-                icon={<Wand className="w-6 h-6 futuristic-icon" />}
-                title="AI Cover Letters"
-                desc="Generate compelling, job-specific cover letters instantly with AI."
-                comingSoon={true}
-              />
-              <FeatureCard
-                icon={<TrendingUp className="w-6 h-6 futuristic-icon" />}
-                title="Market Analytics"
-                desc="Get insights on salary trends, job market data, and career opportunities."
-                comingSoon={true}
-              />
-              <FeatureCard
-                icon={<Rocket className="w-6 h-6 futuristic-icon" />}
-                title="Career Acceleration"
-                desc="AI-powered career path recommendations and skill development plans."
-                comingSoon={true}
-              />
-              <FeatureCard
-                href="/profile"
-                icon={<User className="w-6 h-6 futuristic-icon" />}
-                title="Smart Profile Manager"
-                desc="Manage your profile with auto-fill capabilities for faster applications."
-              />
-            </div>
-          </motion.div>
-        </div>
-
-        <footer className="text-center text-xs futuristic-footer-text py-8 space-y-2">
-          <p>© {new Date().getFullYear()} JobMate. The future of job searching is here.</p>
-          <div className="flex justify-center gap-4 text-sm">
-            <Link href="/about" className="futuristic-footer-link">About</Link>
-            <Link href="/contact" className="futuristic-footer-link">Contact</Link>
-            <Link href="/privacy" className="futuristic-footer-link">Privacy</Link>
-            <Link href="/terms" className="futuristic-footer-link">Terms</Link>
-          </div>
-        </footer>
-
-        {/* AI Assistant Chat Button */}
-        <motion.button
-          onClick={() => setShowChat(!showChat)}
-          className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 p-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          animate={{ 
-            boxShadow: [
-              '0 0 20px rgba(147, 51, 234, 0.5)', 
-              '0 0 30px rgba(59, 130, 246, 0.8)', 
-              '0 0 20px rgba(147, 51, 234, 0.5)'
-            ] 
-          }}
-          transition={{ repeat: Infinity, duration: 2 }}
+    <FuturisticLayout>
+      <CyberNavbar />
+      
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
         >
-          <MessageCircle className="w-6 h-6" />
-        </motion.button>
+          <motion.h1 
+            className="text-6xl md:text-8xl font-bold mb-6 cyber-heading"
+            initial={{ scale: 0.5 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+          >
+            <span className="gradient-text">
+              Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]}
+            </span>
+          </motion.h1>
+          
+          <motion.p 
+            className="text-xl md:text-2xl text-gray-300 mb-8 elegant-text"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Your AI-powered career acceleration platform is ready
+          </motion.p>
 
-        {/* AI Assistant Chat */}
-        <AIAssistantChat isOpen={showChat} onClose={() => setShowChat(false)} />
-      </div>
-    </>
-  );
-}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-wrap justify-center gap-4 mb-8"
+          >
+            {achievements.map((achievement, index) => (
+              <div key={index} className="glass-card p-4 text-center hover-lift">
+                <achievement.icon className={`w-6 h-6 text-${achievement.color}-400 mx-auto mb-2`} />
+                <div className={`text-2xl font-bold text-${achievement.color}-400`}>
+                  {achievement.value}
+                </div>
+                <div className="text-xs text-gray-400">{achievement.label}</div>
+              </div>
+            ))}
+          </motion.div>
 
-function FeatureCard({ icon, title, desc, href, comingSoon }) {
-  return (
-    <motion.div
-      variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-      whileHover={{ scale: 1.05, rotate: 2 }}
-      transition={{ type: 'spring', stiffness: 100 }}
-    >
-      {href ? (
-        <Link href={href}>
-          <div className="cursor-pointer futuristic-card">
-            {comingSoon && <div className="futuristic-coming-soon">Coming Soon</div>}
-            <div className="mb-4">{icon}</div>
-            <Typography variant="h6" className="futuristic-text mb-1 font-semibold">{title}</Typography>
-            <Typography className="futuristic-subtext text-sm leading-snug font-medium">{desc}</Typography>
+          <Link href="/ai-tailoring">
+            <motion.button
+              className="cyber-button text-lg px-8 py-4 group"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Launch AI Copilot
+              <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </motion.button>
+          </Link>
+        </motion.div>
+
+        {/* Stats Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12"
+        >
+          <div className="hologram-card p-6 text-center hover-lift">
+            <Target className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold neon-text">{stats.applicationsToday}</div>
+            <div className="text-gray-400 text-sm">Applications Today</div>
           </div>
-        </Link>
-      ) : (
-        <div className="futuristic-card">
-          {comingSoon && <div className="futuristic-coming-soon">Coming Soon</div>}
-          <div className="mb-4">{icon}</div>
-          <Typography variant="h6" className="futuristic-text mb-1 font-semibold">{title}</Typography>
-          <Typography className="futuristic-subtext text-sm leading-snug font-medium">{desc}</Typography>
-        </div>
-      )}
-    </motion.div>
-  );
-}
+          
+          <div className="hologram-card p-6 text-center hover-lift">
+            <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-green-400">{stats.matchScore}%</div>
+            <div className="text-gray-400 text-sm">AI Match Score</div>
+          </div>
+          
+          <div className="hologram-card p-6 text-center hover-lift">
+            <Globe className="w-8 h-8 text-purple-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-purple-400">{stats.jobsScraped}</div>
+            <div className="text-gray-400 text-sm">Jobs Discovered</div>
+          </div>
+          
+          <div className="hologram-card p-6 text-center hover-lift">
+            <Activity className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-orange-400">{stats.profileViews}</div>
+            <div className="text-gray-400 text-sm">Profile Views</div>
+          </div>
+        </motion.div>
 
-function StepCard({ label, done }) {
-  return (
-    <div className="futuristic-step-card flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="futuristic-step-icon" />
-        <p className="futuristic-subtext text-sm font-medium">{label}</p>
+        {/* Quick Actions Grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mb-12"
+        >
+          <h2 className="text-3xl font-bold mb-8 text-center gradient-text cyber-heading">
+            AI-Powered Tools
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {quickActions.map((action, index) => (
+              <Link key={index} href={action.href}>
+                <motion.div
+                  className="gradient-border p-8 hover-lift hover-glow cursor-pointer group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 + index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div className={`p-4 rounded-2xl bg-gradient-to-r ${action.gradient} group-hover:scale-110 transition-transform`}>
+                      <action.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Performance</div>
+                      <div className="text-lg font-bold text-cyan-400">{action.stats}</div>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold mb-3 group-hover:text-cyan-400 transition-colors">
+                    {action.title}
+                  </h3>
+                  
+                  <p className="text-gray-400 mb-4 elegant-text">
+                    {action.description}
+                  </p>
+                  
+                  <div className="flex items-center text-cyan-400 group-hover:translate-x-2 transition-transform">
+                    <span className="text-sm font-medium">Launch Tool</span>
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </div>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          className="glass-card p-8"
+        >
+          <h3 className="text-2xl font-bold mb-6 gradient-text">Recent Activity</h3>
+          
+          <div className="space-y-4">
+            {[
+              { action: 'Resume tailored for Software Engineer role', time: '2 minutes ago', status: 'success' },
+              { action: 'Job scraped from LinkedIn', time: '15 minutes ago', status: 'processing' },
+              { action: 'Application submitted to TechCorp', time: '1 hour ago', status: 'success' },
+              { action: 'Profile optimization completed', time: '3 hours ago', status: 'success' }
+            ].map((activity, index) => (
+              <motion.div
+                key={index}
+                className="flex items-center justify-between p-4 rounded-lg hover:bg-white/5 transition-colors"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.3 + index * 0.1 }}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className={`w-3 h-3 rounded-full status-${activity.status}`} />
+                  <span className="text-gray-300">{activity.action}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-500 text-sm">
+                  <Clock className="w-4 h-4" />
+                  <span>{activity.time}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
-      {done && <div className="futuristic-step-icon-done" />}
-    </div>
+
+      {/* AI Assistant Chat Button */}
+      <motion.button
+        onClick={() => setShowChat(!showChat)}
+        className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 flex items-center justify-center group"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        animate={{ 
+          boxShadow: [
+            '0 0 20px rgba(147, 51, 234, 0.5)', 
+            '0 0 40px rgba(236, 72, 153, 0.8)', 
+            '0 0 20px rgba(147, 51, 234, 0.5)'
+          ] 
+        }}
+        transition={{ repeat: Infinity, duration: 2 }}
+      >
+        <MessageCircle className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+      </motion.button>
+
+      {/* AI Assistant Chat */}
+      <AIAssistantChat isOpen={showChat} onClose={() => setShowChat(false)} />
+    </FuturisticLayout>
   );
 }

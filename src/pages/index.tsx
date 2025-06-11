@@ -1,314 +1,293 @@
-// pages/index.js
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Typography, Button as MuiButton } from '@mui/material';
-import { Rocket, FileText, Brain, ShieldCheck, Lightbulb, Clock, ClipboardCheck } from 'lucide-react';
+import { Rocket, FileText, Brain, ShieldCheck, Lightbulb, Clock, ClipboardCheck, Sparkles, Zap, Target } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-// Premium Luxurious Futuristic CSS (aligned with home.js)
-const futuristicStyles = `
-  .futuristic-bg {
-    background: linear-gradient(135deg, #0d0221 0%, #1a0b4e 50%, #2a1a6e 100%);
-    min-height: 100vh;
-    position: relative;
-    overflow: hidden;
-    color: #F5F5F5;
-  }
-  .futuristic-bg::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent 70%);
-    animation: glow 12s infinite ease-in-out;
-    z-index: 0;
-  }
-  .futuristic-bg::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(147, 51, 234, 0.1), rgba(255, 215, 0, 0.1));
-    opacity: 0.3;
-    z-index: 0;
-  }
-  .futuristic-starfield {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="rgba(255, 215, 0, 0.8)"/></svg>');
-    background-size: 4px;
-    animation: shimmer 60s linear infinite;
-    z-index: 0;
-  }
-  @keyframes glow {
-    0%, 100% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.1); }
-  }
-  @keyframes shimmer {
-    0% { background-position: 0 0; }
-    100% { background-position: 1000px 1000px; }
-  }
-  .futuristic-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid transparent;
-    border-image: linear-gradient(90deg, #9333ea, #FFD700) 1;
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    padding: 24px;
-    position: relative;
-    z-index: 1;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .futuristic-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 30px rgba(255, 215, 0, 0.6);
-  }
-  .futuristic-button {
-    background: linear-gradient(90deg, #FFD700, #DAA520);
-    border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
-    color: #1e3a8a;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-family: 'Orbitron', sans-serif;
-    transition: all 0.3s ease;
-  }
-  .futuristic-button:hover {
-    background: linear-gradient(90deg, #DAA520, #FFD700);
-    box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
-  }
-  .futuristic-text {
-    color: #F5F5F5;
-    text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
-    font-family: 'Orbitron', sans-serif;
-  }
-  .futuristic-subtext {
-    color: #F5F5F5;
-    text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
-    font-family: 'Roboto', sans-serif;
-  }
-  .futuristic-nav {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-    backdrop-filter: blur(10px);
-  }
-  .futuristic-link {
-    color: #F5F5F5;
-    transition: color 0.3s ease;
-    font-family: 'Roboto', sans-serif;
-  }
-  .futuristic-link:hover {
-    color: #FFD700;
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-  }
-  .futuristic-icon {
-    color: #FFD700;
-    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
-    animation: pulse-icon 2s infinite ease-in-out;
-  }
-  @keyframes pulse-icon {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-  }
-`;
+import FuturisticLayout from '@/components/FuturisticLayout';
 
 export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.replace('/home')
+        router.replace('/home');
       }
-    }
-    checkSession()
-  }, [router])
-  return (
-    <div className="futuristic-bg">
-      <style>{futuristicStyles}</style>
-      <div className="futuristic-starfield" />
+    };
+    checkSession();
+  }, [router]);
 
+  return (
+    <FuturisticLayout>
       {/* Navbar */}
-      <header className="futuristic-nav flex justify-between items-center px-8 py-4 sticky top-0 z-10">
+      <header className="glass-card flex justify-between items-center px-8 py-4 sticky top-4 z-10 mx-4 rounded-2xl">
         <Link href="/">
-          <div className="flex items-center space-x-3 cursor-pointer">
-            <Image src="/favicon.ico" alt="JobMate Logo" width={32} height={32} />
-            <Typography className="futuristic-text text-2xl font-semibold">
+          <motion.div 
+            className="flex items-center space-x-3 cursor-pointer group"
+            whileHover={{ scale: 1.05 }}
+          >
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">JM</span>
+              </div>
+              <div className="absolute inset-0 bg-cyan-400 rounded-xl blur-lg opacity-30 group-hover:opacity-60 transition-opacity" />
+            </div>
+            <span className="text-2xl font-bold gradient-text cyber-heading">
               JobMate
-            </Typography>
-          </div>
+            </span>
+          </motion.div>
         </Link>
         <div className="space-x-4">
           <Link href="/login">
-            <MuiButton className="futuristic-button text-sm">Login</MuiButton>
+            <motion.button 
+              className="cyber-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Launch Platform
+            </motion.button>
           </Link>
-
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center text-center py-32 px-6 relative z-1">
+      <section className="flex flex-col items-center justify-center text-center py-32 px-6 relative">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8 }}
         >
-          <Typography
-            variant="h2"
-            className="futuristic-text font-bold mb-6 sm:text-6xl text-4xl"
-            style={{
-              background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 12px rgba(255, 215, 0, 0.7)',
-            }}
-          >
-            AI-Powered Resume Mastery
-          </Typography>
+          <div className="flex items-center justify-center gap-6 mb-8">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              <Sparkles className="w-16 h-16 text-cyan-400" />
+            </motion.div>
+            <h1 className="text-6xl md:text-8xl font-bold gradient-text cyber-heading">
+              AI-Powered Career Mastery
+            </h1>
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              <Brain className="w-16 h-16 text-purple-400" />
+            </motion.div>
+          </div>
         </motion.div>
+        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
         >
-          <Typography
-            className="futuristic-subtext text-lg max-w-2xl mx-auto mb-16 sm:mt-24 mt-16"
-          >
-            Transform your job hunt with JobMate’s intelligent tools. Upload once, shine everywhere.
-          </Typography>
+          <p className="text-2xl text-gray-300 max-w-4xl mx-auto mb-16 elegant-text">
+            Transform your job hunt with JobMate's intelligent AI copilot. Upload once, dominate everywhere.
+          </p>
         </motion.div>
-        <Link href="/login">
-          <motion.div
-            className="mt-16" // Added margin-top to the wrapper div
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="flex flex-col sm:flex-row gap-6 mb-16"
+        >
+          <Link href="/login">
+            <motion.button
+              className="cyber-button text-xl px-12 py-6 group"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="flex items-center gap-3">
+                <Rocket className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                Launch AI Copilot
+              </div>
+            </motion.button>
+          </Link>
+          
+          <motion.button
+            className="glass-card px-12 py-6 border border-cyan-400/50 hover:border-cyan-400 transition-colors text-xl"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <MuiButton className="futuristic-button text-lg px-8 py-3">
-              Launch Now
-            </MuiButton>
-          </motion.div>
-        </Link>
+            <div className="flex items-center gap-3">
+              <FileText className="w-6 h-6" />
+              Watch Demo
+            </div>
+          </motion.button>
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.9 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+        >
+          {[
+            { number: '94%', label: 'Match Rate Improvement' },
+            { number: '10x', label: 'Faster Applications' },
+            { number: '50K+', label: 'Jobs Processed' }
+          ].map((stat, index) => (
+            <div key={index} className="hologram-card p-8 text-center">
+              <div className="text-4xl font-bold gradient-text mb-2">{stat.number}</div>
+              <div className="text-gray-400">{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 px-6 max-w-6xl mx-auto">
-        <Typography
-          variant="h3"
-          className="futuristic-text text-center font-semibold mb-16 sm:text-4xl text-3xl" // Increased mb-16
-          style={{
-            background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
-          }}
+      <section id="how-it-works" className="py-24 px-6 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
         >
-          How JobMate Works
-        </Typography>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pt-4"> {/* Added pt-4 */}
+          <h2 className="text-5xl font-bold gradient-text cyber-heading mb-6">
+            How JobMate AI Works
+          </h2>
+          <p className="text-xl text-gray-300 elegant-text">
+            Four simple steps to career acceleration
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
-            { icon: FileText, text: 'Upload Resume' },
-            { icon: Brain, text: 'Add Job Description' },
-            { icon: Rocket, text: 'Generate Resume' },
-            { icon: ShieldCheck, text: 'Track Applications' },
+            { icon: FileText, title: 'Upload Resume', desc: 'Upload your master resume once', gradient: 'from-blue-500 to-cyan-500' },
+            { icon: Brain, title: 'AI Analysis', desc: 'AI analyzes job requirements', gradient: 'from-purple-500 to-pink-500' },
+            { icon: Zap, title: 'Smart Tailoring', desc: 'Generate perfect matches instantly', gradient: 'from-green-500 to-teal-500' },
+            { icon: Target, title: 'Auto-Apply', desc: 'Apply to jobs automatically', gradient: 'from-orange-500 to-red-500' },
           ].map((step, index) => (
             <motion.div
               key={index}
-              className="futuristic-card text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, rotate: 2 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              whileHover={{ scale: 1.05, y: -10 }}
+              className="gradient-border p-8 text-center hover-lift"
             >
-              <step.icon className="w-10 h-10 mx-auto mb-4 futuristic-icon" />
-              <Typography className="futuristic-text font-medium">
-                {step.text}
-              </Typography>
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${step.gradient} mx-auto mb-6 flex items-center justify-center`}>
+                <step.icon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 gradient-text">{step.title}</h3>
+              <p className="text-gray-400 elegant-text">{step.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Feature Teaser Section */}
-      <section className="py-24 px-6 text-center relative z-1">
-        <Typography
-          variant="h3"
-          className="futuristic-text font-semibold mb-48 sm:text-4xl text-3xl" // Increased mb-8 to mb-12
-          style={{
-            background: 'linear-gradient(90deg, #FFD700, #C0C0C0)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
-          }}
+      {/* Features Section */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
         >
-          Why Choose JobMate?
-        </Typography>
-        <div className="flex justify-center mb-8"> {/* Added flex and justify-center */}
-          <Typography
-            className="futuristic-subtext max-w-2xl text-lg text-center mt-16" // Added mt-8 to move it down
-          >
-            Elevate your career with AI that’s fast, precise, and designed for success. JobMate is your edge in the job market.
-          </Typography>
-        </div>
+          <h2 className="text-5xl font-bold gradient-text cyber-heading mb-6">
+            Why Choose JobMate?
+          </h2>
+          <p className="text-xl text-gray-300 elegant-text max-w-3xl mx-auto">
+            Elevate your career with AI that's fast, precise, and designed for success. JobMate is your edge in the job market.
+          </p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
               icon: Lightbulb,
-              title: 'Intelligent Tailoring',
+              title: 'Intelligent AI Tailoring',
               text: 'Our AI crafts resumes that align perfectly with job descriptions, highlighting your strengths.',
+              gradient: 'from-yellow-500 to-orange-500'
             },
             {
               icon: Clock,
-              title: 'Time Efficiency',
+              title: 'Lightning Speed',
               text: 'Skip hours of editing. Get polished, job-ready resumes in moments.',
+              gradient: 'from-blue-500 to-purple-500'
             },
             {
               icon: ClipboardCheck,
-              title: 'Organized Tracking',
+              title: 'Smart Tracking',
               text: 'Monitor your applications and resume history in a sleek, unified dashboard.',
+              gradient: 'from-green-500 to-teal-500'
             },
           ].map((feature, index) => (
             <motion.div
               key={index}
-              className="futuristic-card text-left"
-              initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, rotate: 2 }}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              whileHover={{ scale: 1.05, y: -10 }}
+              className="gradient-border p-8 hover-lift"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <feature.icon className="w-6 h-6 futuristic-icon" />
-                <Typography className="futuristic-text text-xl font-semibold">
-                  {feature.title}
-                </Typography>
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${feature.gradient} mb-6 flex items-center justify-center`}>
+                <feature.icon className="w-8 h-8 text-white" />
               </div>
-              <Typography className="futuristic-subtext opacity-70">
-                {feature.text}
-              </Typography>
+              <h3 className="text-2xl font-bold mb-4 gradient-text">{feature.title}</h3>
+              <p className="text-gray-400 elegant-text leading-relaxed">{feature.text}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
+      {/* CTA Section */}
+      <section className="py-24 px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="glass-card p-16 max-w-4xl mx-auto"
+        >
+          <h2 className="text-5xl font-bold gradient-text cyber-heading mb-6">
+            Ready to Accelerate Your Career?
+          </h2>
+          <p className="text-xl text-gray-300 mb-12 elegant-text">
+            Join thousands of professionals who've transformed their job search with AI
+          </p>
+          <Link href="/login">
+            <motion.button
+              className="cyber-button text-xl px-12 py-6"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="flex items-center gap-3">
+                <Rocket className="w-6 h-6" />
+                Start Your AI Journey
+              </div>
+            </motion.button>
+          </Link>
+        </motion.div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-[rgba(255,215,0,0.2)] text-center py-6">
-        <Typography className="futuristic-subtext text-sm opacity-70">
-          JobMate © {new Date().getFullYear()} | Built with <span style={{ color: 'red' }}>❤️</span> for all job seekers, powered by AI
-        </Typography>
+      <footer className="border-t border-white/10 text-center py-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">JM</span>
+            </div>
+            <span className="text-xl font-bold gradient-text">JobMate</span>
+          </div>
+          <p className="text-gray-400 elegant-text mb-6">
+            JobMate © {new Date().getFullYear()} | Built with ❤️ for all job seekers, powered by AI
+          </p>
+          <div className="flex justify-center gap-8 text-sm">
+            <Link href="/about" className="text-gray-400 hover:text-cyan-400 transition-colors">About</Link>
+            <Link href="/contact" className="text-gray-400 hover:text-cyan-400 transition-colors">Contact</Link>
+            <Link href="/privacy" className="text-gray-400 hover:text-cyan-400 transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-gray-400 hover:text-cyan-400 transition-colors">Terms</Link>
+          </div>
+        </div>
       </footer>
-    </div>
+    </FuturisticLayout>
   );
 }

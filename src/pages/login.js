@@ -1,108 +1,11 @@
-// pages/login.js
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/router';
-import { LockKeyhole, UserPlus2 } from 'lucide-react';
+import { LockKeyhole, UserPlus2, Mail, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Typography } from '@mui/material';
 import Link from 'next/link';
-
-const futuristicStyles = `
-  .futuristic-bg {
-    background: linear-gradient(135deg, #0a0a23 0%, #1a1a4e 50%, #2a1a6e 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    padding: 16px;
-  }
-  .futuristic-bg::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(147, 51, 234, 0.3), transparent 70%);
-    animation: glow 12s infinite ease-in-out;
-    z-index: 0;
-  }
-  @keyframes glow {
-    0%, 100% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.1); }
-  }
-  .futuristic-card {
-    background: rgba(30, 30, 60, 0.7);
-    border: 1px solid rgba(147, 51, 234, 0.6);
-    border-radius: 16px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    padding: 24px;
-    margin: 16px;
-    max-width: 400px;
-    width: 100%;
-    position: relative;
-    z-index: 1;
-    transition: transform 0.3s ease;
-  }
-  .futuristic-card:hover {
-    transform: translateY(-4px);
-  }
-  .futuristic-text {
-    color: #d4d4ff;
-    text-shadow: 0 0 4px rgba(147, 51, 234, 0.3);
-  }
-  .futuristic-input {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(147, 51, 234, 0.5);
-    border-radius: 8px;
-    color: #d4d4ff;
-    padding: 12px;
-    width: 100%;
-    font-size: 14px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  .futuristic-input::placeholder {
-    color: rgba(212, 212, 255, 0.5);
-  }
-  .futuristic-input:focus {
-    outline: none;
-    border-color: #9333ea;
-    box-shadow: 0 0 8px rgba(147, 51, 234, 0.6);
-  }
-  .futuristic-button {
-    background: linear-gradient(90deg, #9333ea, #3b82f6);
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-    color: #fff;
-    font-weight: 600;
-    text-transform: uppercase;
-    width: 100%;
-    transition: all 0.3s ease;
-  }
-  .futuristic-button:hover {
-    background: linear-gradient(90deg, #a855f7, #60a5fa);
-    box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
-  }
-  .futuristic-link {
-    color: #60a5fa;
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
-  .futuristic-link:hover {
-    color: #a855f7;
-    text-decoration: underline;
-  }
-  .error-text {
-    color: #f87171;
-    text-shadow: 0 0 3px rgba(248, 113, 113, 0.3);
-  }
-`;
+import FuturisticLayout from '@/components/FuturisticLayout';
 
 export default function AuthPage() {
   const [name, setName] = useState('');
@@ -115,23 +18,19 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Add this effect to get the current user
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user);
-        // Check if we should close the window (for extension login)
         handleExtensionLogin();
       } else {
         setUser(null);
       }
     });
 
-    // Initial user check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-        // Also check on initial load
         handleExtensionLogin();
       }
     });
@@ -151,12 +50,11 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // Important
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
-    })
-    if (error) setError(error.message)
-  } ;
-  
+    });
+    if (error) setError(error.message);
+  };
 
   const handleAuth = async () => {
     setError('');
@@ -196,37 +94,27 @@ export default function AuthPage() {
     router.push('/home');
   };
 
-  // Add this function to handle extension login
   async function handleExtensionLogin() {
     try {
-      // Only proceed if user is authenticated
       if (!user) return;
       
-      // Generate a token for the extension
       const tokenData = {
         userId: user.id,
-        exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+        exp: Date.now() + (24 * 60 * 60 * 1000)
       };
       
-      // Encode token as base64
       const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
-      
-      // Store token in localStorage
       localStorage.setItem('jobmate_extension_token', token);
       
-      // Send message to extension if this was opened from extension
       if (typeof window !== 'undefined') {
-        // Check if window was opened by extension
         const isExtension = document.referrer.includes('chrome-extension://');
         
         if (isExtension) {
-          // Send message to extension
           window.postMessage({ 
             type: 'JOBMATE_LOGIN_SUCCESS', 
             token: token 
           }, '*');
           
-          // Close tab after a short delay to allow message to be processed
           setTimeout(() => {
             window.close();
           }, 1000);
@@ -237,7 +125,6 @@ export default function AuthPage() {
     }
   }
   
-  // Call handleExtensionLogin when user is authenticated
   useEffect(() => {
     if (user) {
       handleExtensionLogin();
@@ -245,116 +132,143 @@ export default function AuthPage() {
   }, [user]);
 
   return (
-    <div className="futuristic-bg">
-      <style>{futuristicStyles}</style>
-      <motion.div
-        className="futuristic-card"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="text-center mb-6">
-          {mode === 'login' ? (
-            <LockKeyhole className="w-8 h-8 mx-auto mb-2" style={{ color: '#9333ea', filter: 'drop-shadow(0 0 4px rgba(147, 51, 234, 0.6))' }} />
-          ) : (
-            <UserPlus2 className="w-8 h-8 mx-auto mb-2" style={{ color: '#9333ea', filter: 'drop-shadow(0 0 4px rgba(147, 51, 234, 0.6))' }} />
-          )}
-          <Typography
-            variant="h5"
-            className="futuristic-text font-bold"
-            style={{
-              background: 'linear-gradient(90deg, #9333ea, #3b82f6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            {mode === 'login' ? 'Access Portal' : 'Join JobMate'}
-          </Typography>
-          <Typography className="futuristic-text text-sm opacity-70 mt-1">
-            {mode === 'login' ? 'Enter your credentials' : 'Create your profile'}
-          </Typography>
-        </div>
-
-        {mode === 'signup' && (
-          <input
-            type="text"
-            placeholder="Full Name"
-            className="futuristic-input mb-4"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        )}
-        <input
-          type="email"
-          placeholder="Email"
-          className="futuristic-input mb-4"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <div className="relative">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            className="futuristic-input mb-4"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <span
-            className="absolute right-3 top-3 cursor-pointer text-sm text-gray-400"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </span>
-        </div>
-        {mode === 'login' && (
-          <div className="text-center mb-4">
-            <Link href="/forgot-password" className="futuristic-link text-sm">
-              Forgot Password?
-            </Link>
-          </div>
-        )}
-
-        {error && (
-          <Typography className="error-text text-sm mb-4 text-center">
-            {error}
-          </Typography>
-        )}
-
-        <motion.button
-          className="futuristic-button"
-          onClick={handleAuth}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          disabled={loading}
+    <FuturisticLayout>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div
+          className="glass-card max-w-md w-full p-8 hover-lift"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          {loading ? 'Loading...' : mode === 'login' ? 'Login' : 'Sign Up'}
-        </motion.button>
-
-        <motion.button
-          className="futuristic-button mt-4 flex items-center justify-center gap-2"
-          onClick={handleGoogleLogin}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <img
-            src="/google_logo.png"
-            alt="Google Logo"
-            className="w-5 h-5"
-          />
-          Sign in with Google
-        </motion.button>
-        <div className="mt-20"> {/* Added a wrapper div with margin-top */}
-          <Typography className="futuristic-text text-sm text-center">
-            {mode === 'login' ? 'New to JobMate?' : 'Already a member?'}{' '}
-            <span
-              onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              className="futuristic-link cursor-pointer"
+          <div className="text-center mb-8">
+            <motion.div
+              className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             >
-              {mode === 'login' ? 'Sign Up' : 'Login'}
-            </span>
-          </Typography>
-        </div>
-      </motion.div>
-    </div>
+              {mode === 'login' ? (
+                <LockKeyhole className="w-8 h-8 text-white" />
+              ) : (
+                <UserPlus2 className="w-8 h-8 text-white" />
+              )}
+            </motion.div>
+            
+            <h1 className="text-3xl font-bold gradient-text cyber-heading mb-2">
+              {mode === 'login' ? 'Access Portal' : 'Join JobMate'}
+            </h1>
+            <p className="text-gray-400 elegant-text">
+              {mode === 'login' ? 'Enter your credentials to continue' : 'Create your AI-powered profile'}
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {mode === 'signup' && (
+              <div className="cyber-input-container">
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className="cyber-input w-full"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
+            
+            <div className="cyber-input-container">
+              <input
+                type="email"
+                placeholder="Email Address"
+                className="cyber-input w-full"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            
+            <div className="relative cyber-input-container">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                className="cyber-input w-full pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {mode === 'login' && (
+              <div className="text-center">
+                <Link href="/forgot-password" className="text-cyan-400 hover:text-cyan-300 transition-colors text-sm">
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
+
+            {error && (
+              <div className="glass-card p-4 border border-red-400/50 bg-red-500/10">
+                <p className="text-red-400 text-sm text-center">{error}</p>
+              </div>
+            )}
+
+            <motion.button
+              className="cyber-button w-full text-lg py-4"
+              onClick={handleAuth}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Processing...
+                </div>
+              ) : (
+                mode === 'login' ? 'Access Dashboard' : 'Create Account'
+              )}
+            </motion.button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-transparent text-gray-400">or continue with</span>
+              </div>
+            </div>
+
+            <motion.button
+              className="glass-card w-full py-4 border border-gray-400/50 hover:border-cyan-400/50 transition-colors flex items-center justify-center gap-3"
+              onClick={handleGoogleLogin}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <img
+                src="/google_logo.png"
+                alt="Google Logo"
+                className="w-5 h-5"
+              />
+              <span>Sign in with Google</span>
+            </motion.button>
+
+            <div className="text-center pt-6">
+              <p className="text-gray-400 elegant-text">
+                {mode === 'login' ? 'New to JobMate?' : 'Already have an account?'}{' '}
+                <button
+                  onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors font-semibold"
+                >
+                  {mode === 'login' ? 'Create Account' : 'Sign In'}
+                </button>
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </FuturisticLayout>
   );
 }

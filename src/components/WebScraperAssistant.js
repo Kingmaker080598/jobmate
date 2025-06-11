@@ -13,7 +13,10 @@ import {
   DollarSign,
   Clock,
   Target,
-  Sparkles
+  Sparkles,
+  Zap,
+  Brain,
+  TrendingUp
 } from 'lucide-react';
 import { Typography, Button, TextField, Chip, Card, CardContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -29,12 +32,12 @@ const WebScraperAssistant = () => {
   const [loading, setLoading] = useState(false);
 
   const supportedSites = [
-    { name: 'LinkedIn Jobs', pattern: 'linkedin.com/jobs', icon: Building, color: 'blue' },
-    { name: 'Indeed', pattern: 'indeed.com', icon: Search, color: 'green' },
-    { name: 'Glassdoor', pattern: 'glassdoor.com', icon: Building, color: 'purple' },
-    { name: 'AngelList', pattern: 'angel.co', icon: Target, color: 'orange' },
-    { name: 'Remote.co', pattern: 'remote.co', icon: Globe, color: 'teal' },
-    { name: 'ZipRecruiter', pattern: 'ziprecruiter.com', icon: Search, color: 'red' }
+    { name: 'LinkedIn Jobs', pattern: 'linkedin.com/jobs', icon: Building, color: 'blue', gradient: 'from-blue-500 to-cyan-500' },
+    { name: 'Indeed', pattern: 'indeed.com', icon: Search, color: 'green', gradient: 'from-green-500 to-teal-500' },
+    { name: 'Glassdoor', pattern: 'glassdoor.com', icon: Building, color: 'purple', gradient: 'from-purple-500 to-pink-500' },
+    { name: 'AngelList', pattern: 'angel.co', icon: Target, color: 'orange', gradient: 'from-orange-500 to-red-500' },
+    { name: 'Remote.co', pattern: 'remote.co', icon: Globe, color: 'teal', gradient: 'from-teal-500 to-cyan-500' },
+    { name: 'ZipRecruiter', pattern: 'ziprecruiter.com', icon: Search, color: 'red', gradient: 'from-red-500 to-pink-500' }
   ];
 
   useEffect(() => {
@@ -43,7 +46,6 @@ const WebScraperAssistant = () => {
   }, [user]);
 
   const simulateCurrentTab = () => {
-    // Simulate detecting current tab URL
     const mockUrls = [
       'https://www.linkedin.com/jobs/view/3234567890',
       'https://www.indeed.com/viewjob?jk=abc123def456',
@@ -78,10 +80,9 @@ const WebScraperAssistant = () => {
     }
 
     setLoading(true);
-    toast.loading('Extracting job details...', { id: 'scrape' });
+    toast.loading('Extracting job details with AI...', { id: 'scrape' });
 
     try {
-      // Simulate scraping process
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const mockJobData = {
@@ -138,7 +139,6 @@ Benefits:
 
       setScrapedData(mockJobData);
 
-      // Save to history
       const { error } = await supabase
         .from('scraping_history')
         .insert({
@@ -167,13 +167,10 @@ Benefits:
   const sendToAITailoring = () => {
     if (!scrapedData) return;
     
-    // Store scraped data in localStorage for the AI tailoring component
     localStorage.setItem('jobDescriptionForTailoring', scrapedData.description);
     localStorage.setItem('jobDataForTailoring', JSON.stringify(scrapedData));
     
     toast.success('📤 Job data sent to AI Resume Tailoring!');
-    
-    // Navigate to AI tailoring page
     window.location.href = '/ai-tailoring';
   };
 
@@ -209,90 +206,124 @@ Benefits:
 
   const SiteCard = ({ site }) => (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      className={`p-4 rounded-lg border-2 ${
+      whileHover={{ scale: 1.02, y: -5 }}
+      whileTap={{ scale: 0.98 }}
+      className={`gradient-border p-6 cursor-pointer transition-all ${
         currentUrl.includes(site.pattern) 
-          ? `border-${site.color}-500 bg-${site.color}-50` 
-          : 'border-gray-200 hover:border-gray-300'
+          ? 'border-cyan-400 bg-cyan-400/10' 
+          : 'hover:border-purple-400/50'
       }`}
     >
-      <div className="flex items-center gap-3">
-        <site.icon className={`w-6 h-6 text-${site.color}-600`} />
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${site.gradient} flex items-center justify-center`}>
+          <site.icon className="w-6 h-6 text-white" />
+        </div>
         <div>
-          <Typography className="font-semibold">{site.name}</Typography>
-          <Typography className="text-sm text-gray-600">
-            {currentUrl.includes(site.pattern) ? 'Active' : 'Supported'}
-          </Typography>
+          <h4 className="font-bold text-lg">{site.name}</h4>
+          <p className="text-sm text-gray-400">
+            {currentUrl.includes(site.pattern) ? 'Currently Active' : 'Supported Platform'}
+          </p>
         </div>
       </div>
+      {currentUrl.includes(site.pattern) && (
+        <div className="mt-4 flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          <span className="text-xs text-green-400 font-mono">DETECTED</span>
+        </div>
+      )}
     </motion.div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-12"
       >
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <Globe className="w-8 h-8 text-green-600" />
-          <Typography variant="h3" className="font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            Web Scraper Assistant
-          </Typography>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          >
+            <Globe className="w-12 h-12 text-green-400" />
+          </motion.div>
+          <h1 className="text-5xl md:text-7xl font-bold gradient-text cyber-heading">
+            Web Scraper AI
+          </h1>
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Brain className="w-12 h-12 text-purple-400" />
+          </motion.div>
         </div>
-        <Typography className="text-gray-600 text-lg">
-          Extract job details from any job posting with AI-powered precision
-        </Typography>
+        <p className="text-xl text-gray-300 elegant-text">
+          Extract job details from any posting with AI-powered precision
+        </p>
       </motion.div>
 
       {/* Current Page Detection */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="bg-white rounded-xl shadow-lg p-6 mb-8"
+        className="glass-card p-8 mb-8 hover-lift"
       >
-        <Typography variant="h5" className="mb-6 flex items-center gap-3">
-          <Eye className="w-6 h-6 text-blue-600" />
-          Current Page Detection
-        </Typography>
+        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
+          <Eye className="w-8 h-8 text-cyan-400" />
+          <span className="gradient-text">Page Detection & Extraction</span>
+        </h2>
 
-        <div className="mb-6">
-          <TextField
-            fullWidth
-            label="Current Tab URL"
-            value={currentUrl}
-            onChange={(e) => setCurrentUrl(e.target.value)}
-            variant="outlined"
-            className="mb-4"
-          />
+        <div className="mb-8">
+          <div className="cyber-input-container mb-6">
+            <input
+              type="url"
+              className="cyber-input w-full"
+              placeholder="Enter job posting URL or let AI detect current tab..."
+              value={currentUrl}
+              onChange={(e) => setCurrentUrl(e.target.value)}
+            />
+          </div>
           
           <div className="flex gap-4">
-            <Button
-              variant="contained"
-              size="large"
+            <motion.button
+              className="cyber-button flex-1 text-lg py-4"
               onClick={scrapeCurrentPage}
               disabled={loading || !currentUrl}
-              startIcon={loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {loading ? 'Extracting...' : 'Extract Job Details'}
-            </Button>
+              {loading ? (
+                <div className="flex items-center justify-center gap-3">
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                  AI Extracting...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-3">
+                  <Download className="w-6 h-6" />
+                  Extract Job Details
+                </div>
+              )}
+            </motion.button>
             
-            <Button
-              variant="outlined"
+            <motion.button
+              className="glass-card px-8 py-4 border border-purple-400/50 hover:border-purple-400 transition-colors"
               onClick={simulateCurrentTab}
-              startIcon={<RefreshCw className="w-4 h-4" />}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Detect Current Tab
-            </Button>
+              <div className="flex items-center gap-3">
+                <RefreshCw className="w-5 h-5" />
+                Detect Tab
+              </div>
+            </motion.button>
           </div>
         </div>
 
         <div>
-          <Typography variant="h6" className="mb-4">Supported Platforms</Typography>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h3 className="text-xl font-semibold mb-6 text-cyan-400">Supported Platforms</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {supportedSites.map((site) => (
               <SiteCard key={site.name} site={site} />
             ))}
@@ -305,94 +336,105 @@ Benefits:
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="glass-card p-8 mb-8 hover-lift"
         >
-          <div className="flex justify-between items-center mb-6">
-            <Typography variant="h5" className="flex items-center gap-3">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-              Extracted Job Details
-            </Typography>
-            <div className="flex gap-3">
-              <Button
-                variant="outlined"
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold flex items-center gap-4">
+              <CheckCircle className="w-8 h-8 text-green-400" />
+              <span className="gradient-text">Extracted Job Intelligence</span>
+            </h2>
+            <div className="flex gap-4">
+              <motion.button
+                className="cyber-button px-6 py-3"
                 onClick={sendToAITailoring}
-                startIcon={<Sparkles className="w-4 h-4" />}
-                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Send to AI Tailoring
-              </Button>
-              <Button
-                variant="outlined"
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5" />
+                  Send to AI Tailoring
+                </div>
+              </motion.button>
+              <motion.button
+                className="glass-card px-6 py-3 border border-cyan-400/50 hover:border-cyan-400 transition-colors"
                 onClick={saveJobToBoard}
-                startIcon={<Target className="w-4 h-4" />}
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Save to Job Board
-              </Button>
+                <div className="flex items-center gap-3">
+                  <Target className="w-5 h-5" />
+                  Save to Board
+                </div>
+              </motion.button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <Card className="mb-6">
-                <CardContent>
-                  <Typography variant="h6" className="mb-4 flex items-center gap-2">
-                    <Building className="w-5 h-5 text-blue-600" />
-                    Job Overview
-                  </Typography>
-                  <div className="space-y-3">
-                    <div>
-                      <Typography className="font-semibold text-lg">{scrapedData.title}</Typography>
-                      <Typography className="text-gray-600">{scrapedData.company}</Typography>
+              <div className="hologram-card p-8 mb-8">
+                <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
+                  <Building className="w-6 h-6 text-cyan-400" />
+                  Job Overview
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-2xl font-bold gradient-text">{scrapedData.title}</h4>
+                    <p className="text-lg text-gray-300">{scrapedData.company}</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-blue-400" />
+                      <span>{scrapedData.location}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{scrapedData.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        <span>{scrapedData.salary}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{scrapedData.jobType}</span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-green-400" />
+                      <span>{scrapedData.salary}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-purple-400" />
+                      <span>{scrapedData.jobType}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-orange-400" />
+                      <span>{scrapedData.experience}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" className="mb-4">Key Information</Typography>
-                  <div className="space-y-4">
-                    <div>
-                      <Typography className="font-semibold mb-2">Required Skills</Typography>
-                      <div className="flex flex-wrap gap-2">
-                        {scrapedData.skills.map((skill, index) => (
-                          <Chip key={index} label={skill} size="small" variant="outlined" />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <Typography className="font-semibold mb-2">Experience Level</Typography>
-                      <Chip label={scrapedData.experience} color="primary" />
-                    </div>
+              <div className="hologram-card p-8">
+                <h3 className="text-xl font-semibold mb-6 text-cyan-400">AI-Extracted Skills</h3>
+                <div className="flex flex-wrap gap-3">
+                  {scrapedData.skills.map((skill, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Chip
+                        label={skill}
+                        className="neon-border bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3 text-cyan-400">Experience Level</h4>
+                  <div className="glass-card p-4 border border-cyan-400/30">
+                    <span className="text-cyan-300 font-mono">{scrapedData.experience}</span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
 
             <div>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" className="mb-4">Job Description</Typography>
-                  <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm">{scrapedData.description}</pre>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="hologram-card p-8">
+                <h3 className="text-xl font-semibold mb-6 text-cyan-400">Job Description</h3>
+                <div className="glass-card p-6 max-h-96 overflow-y-auto border border-gray-400/30">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-300">{scrapedData.description}</pre>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -402,49 +444,53 @@ Benefits:
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-lg p-6"
+        className="glass-card p-8"
       >
-        <Typography variant="h5" className="mb-6 flex items-center gap-3">
-          <Clock className="w-6 h-6 text-purple-600" />
-          Recent Extractions
-        </Typography>
+        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
+          <Clock className="w-8 h-8 text-purple-400" />
+          <span className="gradient-text">Extraction History</span>
+        </h2>
 
         {scrapingHistory.length === 0 ? (
-          <div className="text-center py-8">
-            <Typography className="text-gray-500">No extraction history yet</Typography>
+          <div className="text-center py-12">
+            <Globe className="w-16 h-16 text-gray-500 mx-auto mb-4 opacity-50" />
+            <p className="text-gray-500 text-lg">No extraction history yet</p>
+            <p className="text-gray-600 text-sm">Start scraping jobs to see your history here</p>
           </div>
         ) : (
           <div className="space-y-4">
             {scrapingHistory.map((entry, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="gradient-border p-6 hover-lift cursor-pointer"
+                onClick={() => setScrapedData(entry.scraped_data)}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-3 h-3 rounded-full ${entry.success ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <div>
-                    <Typography className="font-medium">{entry.job_title}</Typography>
-                    <Typography className="text-sm text-gray-600">
-                      {entry.company} • {new Date(entry.created_at).toLocaleDateString()}
-                    </Typography>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
+                    <div>
+                      <h4 className="font-bold text-lg">{entry.job_title}</h4>
+                      <p className="text-gray-400">
+                        {entry.company} • {new Date(entry.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Chip 
-                    label={entry.success ? 'Success' : 'Failed'} 
-                    color={entry.success ? 'success' : 'error'}
-                    size="small"
-                  />
-                  <Button
-                    size="small"
-                    onClick={() => setScrapedData(entry.scraped_data)}
-                    startIcon={<Eye className="w-3 h-3" />}
-                  >
-                    View
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Chip 
+                      label={entry.success ? 'Success' : 'Failed'} 
+                      className={entry.success ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}
+                    />
+                    <motion.button
+                      className="glass-card px-4 py-2 border border-cyan-400/50 hover:border-cyan-400 transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             ))}

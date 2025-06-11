@@ -12,7 +12,10 @@ import {
   BarChart3,
   Eye,
   Copy,
-  Wand2
+  Wand2,
+  Brain,
+  Zap,
+  TrendingUp
 } from 'lucide-react';
 import { Typography, Button, TextField, Chip, LinearProgress, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -34,14 +37,22 @@ const AIResumeTailoringCopilot = () => {
   const [analysisData, setAnalysisData] = useState(null);
 
   const toneOptions = [
-    { value: 'professional', label: 'Professional', desc: 'Formal and corporate tone' },
-    { value: 'enthusiastic', label: 'Enthusiastic', desc: 'Energetic and passionate' },
-    { value: 'concise', label: 'Concise', desc: 'Brief and to the point' },
-    { value: 'technical', label: 'Technical', desc: 'Detail-oriented and precise' }
+    { value: 'professional', label: 'Professional', desc: 'Formal and corporate tone', gradient: 'from-blue-500 to-cyan-500' },
+    { value: 'enthusiastic', label: 'Enthusiastic', desc: 'Energetic and passionate', gradient: 'from-orange-500 to-red-500' },
+    { value: 'concise', label: 'Concise', desc: 'Brief and to the point', gradient: 'from-green-500 to-teal-500' },
+    { value: 'technical', label: 'Technical', desc: 'Detail-oriented and precise', gradient: 'from-purple-500 to-pink-500' }
   ];
 
   useEffect(() => {
     fetchLatestResume();
+    
+    // Check for data from scraper
+    const scrapedJobDescription = localStorage.getItem('jobDescriptionForTailoring');
+    if (scrapedJobDescription) {
+      setJobDescription(scrapedJobDescription);
+      localStorage.removeItem('jobDescriptionForTailoring');
+      toast.success('📥 Job description loaded from scraper!');
+    }
   }, [user]);
 
   const fetchLatestResume = async () => {
@@ -60,7 +71,6 @@ const AIResumeTailoringCopilot = () => {
         if (resume.content) {
           setResumeContent(resume.content);
         } else if (resume.resume_url) {
-          // Fetch content from URL if available
           try {
             const response = await fetch(resume.resume_url);
             const text = await response.text();
@@ -129,7 +139,7 @@ const AIResumeTailoringCopilot = () => {
           resumeContent, 
           jobDescription, 
           toneStyle,
-          keywords: keywords.slice(0, 10) // Top 10 keywords
+          keywords: keywords.slice(0, 10)
         })
       });
 
@@ -205,19 +215,29 @@ const AIResumeTailoringCopilot = () => {
   };
 
   const StepIndicator = ({ currentStep }) => (
-    <div className="flex items-center justify-center mb-8">
+    <div className="flex items-center justify-center mb-12">
       {[1, 2, 3, 4, 5].map((stepNum) => (
         <div key={stepNum} className="flex items-center">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-            stepNum <= currentStep 
-              ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' 
-              : 'bg-gray-200 text-gray-500'
-          }`}>
-            {stepNum < currentStep ? <CheckCircle className="w-5 h-5" /> : stepNum}
-          </div>
+          <motion.div 
+            className={`w-12 h-12 rounded-full flex items-center justify-center font-bold relative ${
+              stepNum <= currentStep 
+                ? 'bg-gradient-to-r from-cyan-400 to-purple-600 text-white' 
+                : 'bg-gray-700 text-gray-400'
+            }`}
+            whileHover={{ scale: 1.1 }}
+            animate={stepNum === currentStep ? { scale: [1, 1.1, 1] } : {}}
+            transition={{ repeat: stepNum === currentStep ? Infinity : 0, duration: 2 }}
+          >
+            {stepNum < currentStep ? <CheckCircle className="w-6 h-6" /> : stepNum}
+            {stepNum <= currentStep && (
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600 opacity-30 blur-lg" />
+            )}
+          </motion.div>
           {stepNum < 5 && (
-            <div className={`w-12 h-1 mx-2 ${
-              stepNum < currentStep ? 'bg-gradient-to-r from-purple-500 to-blue-500' : 'bg-gray-200'
+            <div className={`w-16 h-1 mx-3 rounded-full ${
+              stepNum < currentStep 
+                ? 'bg-gradient-to-r from-cyan-400 to-purple-600' 
+                : 'bg-gray-700'
             }`} />
           )}
         </div>
@@ -226,22 +246,33 @@ const AIResumeTailoringCopilot = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="max-w-7xl mx-auto p-6 min-h-screen">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-12"
       >
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <Sparkles className="w-8 h-8 text-purple-600" />
-          <Typography variant="h3" className="font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            AI Resume Tailoring Copilot
-          </Typography>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Sparkles className="w-12 h-12 text-cyan-400" />
+          </motion.div>
+          <h1 className="text-5xl md:text-7xl font-bold gradient-text cyber-heading">
+            AI Resume Copilot
+          </h1>
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Brain className="w-12 h-12 text-purple-400" />
+          </motion.div>
         </div>
-        <Typography className="text-gray-600 text-lg">
+        <p className="text-xl text-gray-300 elegant-text">
           Transform your resume with AI precision - match any job in seconds
-        </Typography>
+        </p>
       </motion.div>
 
       <StepIndicator currentStep={step} />
@@ -251,58 +282,64 @@ const AIResumeTailoringCopilot = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white rounded-xl shadow-lg p-8"
+          className="glass-card p-8 hover-lift"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <Target className="w-6 h-6 text-purple-600" />
-            <Typography variant="h5" className="font-semibold">
-              Step 1: Paste Job Description
-            </Typography>
+          <div className="flex items-center gap-4 mb-8">
+            <Target className="w-8 h-8 text-cyan-400" />
+            <h2 className="text-3xl font-bold gradient-text">Step 1: Job Description Analysis</h2>
           </div>
           
-          <TextField
-            multiline
-            rows={12}
-            fullWidth
-            placeholder="Paste the complete job description here..."
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            className="mb-6"
-            variant="outlined"
-          />
+          <div className="cyber-input-container mb-8">
+            <textarea
+              className="cyber-input w-full h-64 resize-none"
+              placeholder="Paste the complete job description here..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+            />
+          </div>
 
-          <div className="mb-6">
-            <Typography variant="h6" className="mb-3">Choose Tone Style:</Typography>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold mb-6 text-cyan-400">Choose AI Tone Style:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {toneOptions.map((tone) => (
                 <motion.div
                   key={tone.value}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  className={`gradient-border p-6 cursor-pointer transition-all ${
                     toneStyle === tone.value
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-purple-300'
+                      ? 'border-cyan-400 bg-cyan-400/10'
+                      : 'hover:border-purple-400/50'
                   }`}
                   onClick={() => setToneStyle(tone.value)}
                 >
-                  <Typography className="font-semibold">{tone.label}</Typography>
-                  <Typography className="text-sm text-gray-600">{tone.desc}</Typography>
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${tone.gradient} mb-4 mx-auto`} />
+                  <h4 className="font-bold text-center mb-2">{tone.label}</h4>
+                  <p className="text-sm text-gray-400 text-center">{tone.desc}</p>
                 </motion.div>
               ))}
             </div>
           </div>
 
-          <Button
-            variant="contained"
-            size="large"
+          <motion.button
+            className="cyber-button w-full text-lg py-4"
             onClick={analyzeJobDescription}
             disabled={!jobDescription.trim() || loading}
-            startIcon={loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {loading ? 'Analyzing...' : 'Analyze Job Description'}
-          </Button>
+            {loading ? (
+              <div className="flex items-center justify-center gap-3">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+                Analyzing with AI...
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                <Wand2 className="w-6 h-6" />
+                Analyze Job Description
+              </div>
+            )}
+          </motion.button>
         </motion.div>
       )}
 
@@ -311,14 +348,27 @@ const AIResumeTailoringCopilot = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white rounded-xl shadow-lg p-8 text-center"
+          className="glass-card p-12 text-center"
         >
-          <RefreshCw className="w-16 h-16 text-purple-600 animate-spin mx-auto mb-4" />
-          <Typography variant="h5" className="mb-2">Analyzing Job Description...</Typography>
-          <Typography className="text-gray-600">
-            Our AI is extracting key requirements and matching criteria
-          </Typography>
-          <LinearProgress className="mt-6" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-24 h-24 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full mx-auto mb-8 flex items-center justify-center"
+          >
+            <Brain className="w-12 h-12 text-white" />
+          </motion.div>
+          <h3 className="text-3xl font-bold mb-4 gradient-text">AI Analysis in Progress</h3>
+          <p className="text-gray-300 mb-8">
+            Our advanced AI is extracting key requirements and matching criteria
+          </p>
+          <div className="cyber-progress h-3 mb-4">
+            <motion.div 
+              className="cyber-progress-bar h-full"
+              initial={{ width: 0 }}
+              animate={{ width: '100%' }}
+              transition={{ duration: 2 }}
+            />
+          </div>
         </motion.div>
       )}
 
@@ -327,81 +377,110 @@ const AIResumeTailoringCopilot = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+          className="space-y-8"
         >
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <Typography variant="h5" className="mb-6 flex items-center gap-3">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
-              Analysis Results
-            </Typography>
+          <div className="glass-card p-8">
+            <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
+              <BarChart3 className="w-8 h-8 text-purple-400" />
+              <span className="gradient-text">Analysis Results</span>
+            </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
-                <Typography variant="h3" className="font-bold text-purple-600 mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <motion.div 
+                className="hologram-card p-8 text-center"
+                whileHover={{ scale: 1.05 }}
+              >
+                <TrendingUp className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
+                <div className="text-4xl font-bold text-cyan-400 mb-2">
                   {matchScore}%
-                </Typography>
-                <Typography className="text-gray-600">Current Match Score</Typography>
-              </div>
-              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
-                <Typography variant="h3" className="font-bold text-green-600 mb-2">
+                </div>
+                <div className="text-gray-400">Current Match Score</div>
+              </motion.div>
+              
+              <motion.div 
+                className="hologram-card p-8 text-center"
+                whileHover={{ scale: 1.05 }}
+              >
+                <Zap className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <div className="text-4xl font-bold text-green-400 mb-2">
                   {keywords.length}
-                </Typography>
-                <Typography className="text-gray-600">Key Terms Found</Typography>
-              </div>
-              <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg">
-                <Typography variant="h3" className="font-bold text-orange-600 mb-2">
+                </div>
+                <div className="text-gray-400">Key Terms Found</div>
+              </motion.div>
+              
+              <motion.div 
+                className="hologram-card p-8 text-center"
+                whileHover={{ scale: 1.05 }}
+              >
+                <Brain className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+                <div className="text-4xl font-bold text-orange-400 mb-2">
                   {suggestions.length}
-                </Typography>
-                <Typography className="text-gray-600">Improvements</Typography>
-              </div>
+                </div>
+                <div className="text-gray-400">AI Suggestions</div>
+              </motion.div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                <Typography variant="h6" className="mb-4">Key Keywords to Include:</Typography>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="text-xl font-semibold mb-6 text-cyan-400">Key Keywords to Include:</h3>
+                <div className="flex flex-wrap gap-3">
                   {keywords.slice(0, 15).map((keyword, index) => (
-                    <Chip
+                    <motion.div
                       key={index}
-                      label={keyword}
-                      variant="outlined"
-                      className="border-purple-300 text-purple-700"
-                    />
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Chip
+                        label={keyword}
+                        className="neon-border bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                      />
+                    </motion.div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <Typography variant="h6" className="mb-4">AI Suggestions:</Typography>
-                <div className="space-y-2">
+                <h3 className="text-xl font-semibold mb-6 text-cyan-400">AI Optimization Suggestions:</h3>
+                <div className="space-y-4">
                   {suggestions.slice(0, 5).map((suggestion, index) => (
-                    <div key={index} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
-                      <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <Typography className="text-sm text-blue-800">{suggestion}</Typography>
-                    </div>
+                    <motion.div 
+                      key={index}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-start gap-4 p-4 glass-card hover-lift"
+                    >
+                      <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-gray-300">{suggestion}</p>
+                    </motion.div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 mt-8">
-              <Button
-                variant="contained"
-                size="large"
+            <div className="flex gap-6 mt-12">
+              <motion.button
+                className="cyber-button flex-1 text-lg py-4"
                 onClick={generateTailoredResume}
                 disabled={!resumeContent || loading}
-                startIcon={<Sparkles className="w-5 h-5" />}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Generate Tailored Resume
-              </Button>
-              <Button
-                variant="outlined"
+                <div className="flex items-center justify-center gap-3">
+                  <Sparkles className="w-6 h-6" />
+                  Generate Tailored Resume
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="glass-card px-8 py-4 border border-purple-400/50 hover:border-purple-400 transition-colors"
                 onClick={() => setStep(1)}
-                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 Edit Job Description
-              </Button>
+              </motion.button>
             </div>
           </div>
         </motion.div>
@@ -412,14 +491,33 @@ const AIResumeTailoringCopilot = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white rounded-xl shadow-lg p-8 text-center"
+          className="glass-card p-12 text-center"
         >
-          <Sparkles className="w-16 h-16 text-purple-600 animate-pulse mx-auto mb-4" />
-          <Typography variant="h5" className="mb-2">Crafting Your Perfect Resume...</Typography>
-          <Typography className="text-gray-600">
+          <motion.div
+            animate={{ 
+              rotate: 360,
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ 
+              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+              scale: { duration: 1, repeat: Infinity }
+            }}
+            className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-8 flex items-center justify-center"
+          >
+            <Sparkles className="w-12 h-12 text-white" />
+          </motion.div>
+          <h3 className="text-3xl font-bold mb-4 gradient-text">Crafting Your Perfect Resume</h3>
+          <p className="text-gray-300 mb-8">
             AI is tailoring your resume with optimal keywords and formatting
-          </Typography>
-          <LinearProgress className="mt-6" />
+          </p>
+          <div className="cyber-progress h-3">
+            <motion.div 
+              className="cyber-progress-bar h-full"
+              initial={{ width: 0 }}
+              animate={{ width: '100%' }}
+              transition={{ duration: 3 }}
+            />
+          </div>
         </motion.div>
       )}
 
@@ -428,118 +526,139 @@ const AIResumeTailoringCopilot = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          className="space-y-8"
         >
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="flex justify-between items-center mb-6">
-              <Typography variant="h5" className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                Resume Successfully Tailored!
-              </Typography>
-              <div className="flex items-center gap-2">
-                <Typography className="text-2xl font-bold text-green-600">
-                  {matchScore}%
-                </Typography>
-                <Typography className="text-gray-600">Match Score</Typography>
+          <div className="glass-card p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold flex items-center gap-4">
+                <CheckCircle className="w-8 h-8 text-green-400" />
+                <span className="gradient-text">Resume Successfully Tailored!</span>
+              </h2>
+              <div className="text-right">
+                <div className="text-4xl font-bold text-green-400">{matchScore}%</div>
+                <div className="text-gray-400">Match Score</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <Typography variant="h6">Your Tailored Resume</Typography>
-                  <div className="flex gap-2">
-                    <Button
-                      size="small"
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold">Your Tailored Resume</h3>
+                  <div className="flex gap-3">
+                    <motion.button
+                      className="glass-card px-4 py-2 border border-cyan-400/50 hover:border-cyan-400 transition-colors"
                       onClick={copyToClipboard}
-                      startIcon={<Copy className="w-4 h-4" />}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      Copy
-                    </Button>
-                    <Button
-                      size="small"
+                      <Copy className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      className="glass-card px-4 py-2 border border-purple-400/50 hover:border-purple-400 transition-colors"
                       onClick={() => setShowComparison(true)}
-                      startIcon={<Eye className="w-4 h-4" />}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      Compare
-                    </Button>
+                      <Eye className="w-4 h-4" />
+                    </motion.button>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm">{tailoredResume}</pre>
+                <div className="glass-card p-6 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-300">{tailoredResume}</pre>
                 </div>
               </div>
 
               <div>
-                <Typography variant="h6" className="mb-4">Improvements Made</Typography>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <Typography className="text-sm">Added {keywords.slice(0, 10).length} relevant keywords</Typography>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-blue-600" />
-                    <Typography className="text-sm">Optimized for {toneStyle} tone</Typography>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-purple-600" />
-                    <Typography className="text-sm">Enhanced ATS compatibility</Typography>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-orange-600" />
-                    <Typography className="text-sm">Improved match score by {Math.max(0, matchScore - 60)}%</Typography>
-                  </div>
+                <h3 className="text-xl font-semibold mb-6">AI Improvements Made</h3>
+                <div className="space-y-4">
+                  {[
+                    { icon: CheckCircle, text: `Added ${keywords.slice(0, 10).length} relevant keywords`, color: 'green' },
+                    { icon: Zap, text: `Optimized for ${toneStyle} tone`, color: 'blue' },
+                    { icon: Brain, text: 'Enhanced ATS compatibility', color: 'purple' },
+                    { icon: TrendingUp, text: `Improved match score by ${Math.max(0, matchScore - 60)}%`, color: 'orange' }
+                  ].map((improvement, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center gap-4 p-4 glass-card hover-lift"
+                    >
+                      <improvement.icon className={`w-6 h-6 text-${improvement.color}-400`} />
+                      <span className="text-gray-300">{improvement.text}</span>
+                    </motion.div>
+                  ))}
                 </div>
 
-                <div className="mt-6">
-                  <Typography variant="h6" className="mb-3">Keywords Added:</Typography>
+                <div className="mt-8">
+                  <h4 className="text-lg font-semibold mb-4 text-cyan-400">Keywords Added:</h4>
                   <div className="flex flex-wrap gap-2">
                     {keywords.slice(0, 8).map((keyword, index) => (
-                      <Chip
+                      <motion.div
                         key={index}
-                        label={keyword}
-                        size="small"
-                        className="bg-green-100 text-green-800"
-                      />
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Chip
+                          label={keyword}
+                          className="bg-green-500/20 text-green-300 border border-green-400/30"
+                        />
+                      </motion.div>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 mt-8">
-              <Button
-                variant="contained"
+            <div className="flex flex-wrap gap-4 mt-12">
+              <motion.button
+                className="cyber-button px-8 py-4"
                 onClick={saveToHistory}
-                startIcon={<Save className="w-5 h-5" />}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Save to History
-              </Button>
-              <Button
-                variant="outlined"
+                <div className="flex items-center gap-3">
+                  <Save className="w-5 h-5" />
+                  Save to History
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="glass-card px-8 py-4 border border-cyan-400/50 hover:border-cyan-400 transition-colors"
                 onClick={() => downloadResume('txt')}
-                startIcon={<Download className="w-5 h-5" />}
-                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Download TXT
-              </Button>
-              <Button
-                variant="outlined"
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  Download TXT
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="glass-card px-8 py-4 border border-purple-400/50 hover:border-purple-400 transition-colors"
                 onClick={() => downloadResume('pdf')}
-                startIcon={<Download className="w-5 h-5" />}
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Download PDF
-              </Button>
-              <Button
-                variant="text"
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  Download PDF
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="glass-card px-8 py-4 border border-gray-400/50 hover:border-gray-400 transition-colors"
                 onClick={resetProcess}
-                startIcon={<RefreshCw className="w-5 h-5" />}
-                className="text-gray-600 hover:bg-gray-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Start Over
-              </Button>
+                <div className="flex items-center gap-3">
+                  <RefreshCw className="w-5 h-5" />
+                  Start Over
+                </div>
+              </motion.button>
             </div>
           </div>
         </motion.div>
@@ -551,22 +670,25 @@ const AIResumeTailoringCopilot = () => {
         onClose={() => setShowComparison(false)}
         maxWidth="lg"
         fullWidth
+        PaperProps={{
+          className: 'glass-card border border-cyan-400/30'
+        }}
       >
         <DialogContent className="p-8">
-          <Typography variant="h5" className="mb-6 text-center">
+          <h2 className="text-3xl font-bold mb-8 text-center gradient-text">
             Before vs After Comparison
-          </Typography>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <Typography variant="h6" className="mb-4 text-red-600">Original Resume</Typography>
-              <div className="bg-red-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-sm">{resumeContent}</pre>
+              <h3 className="text-xl font-semibold mb-4 text-red-400">Original Resume</h3>
+              <div className="glass-card p-6 max-h-96 overflow-y-auto border border-red-400/30">
+                <pre className="whitespace-pre-wrap text-sm text-gray-300">{resumeContent}</pre>
               </div>
             </div>
             <div>
-              <Typography variant="h6" className="mb-4 text-green-600">Tailored Resume</Typography>
-              <div className="bg-green-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-sm">{tailoredResume}</pre>
+              <h3 className="text-xl font-semibold mb-4 text-green-400">Tailored Resume</h3>
+              <div className="glass-card p-6 max-h-96 overflow-y-auto border border-green-400/30">
+                <pre className="whitespace-pre-wrap text-sm text-gray-300">{tailoredResume}</pre>
               </div>
             </div>
           </div>
