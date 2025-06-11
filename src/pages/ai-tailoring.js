@@ -6,8 +6,11 @@ import AIResumeTailoringCopilot from '@/components/AIResumeTailoringCopilot';
 export default function AITailoringPage() {
   return (
     <RequireAuth>
-      <FuturisticLayout>
-        <CyberNavbar />
+      <CyberNavbar />
+      <FuturisticLayout
+        title="AI Resume Tailoring"
+        subtitle="Transform your resume with AI-powered optimization for any job posting"
+      >
         <AIResumeTailoringCopilot />
       </FuturisticLayout>
     </RequireAuth>
