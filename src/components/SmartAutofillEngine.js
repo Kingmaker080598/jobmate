@@ -80,7 +80,7 @@ const SmartAutofillEngine = () => {
   useEffect(() => {
     fetchProfile();
     fetchFillHistory();
-  }, [user]);
+  }, [user, fetchProfile, fetchFillHistory]);
 
   const analyzeCurrentPage = async () => {
     setIsAnalyzing(true);

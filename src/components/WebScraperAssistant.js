@@ -56,11 +56,6 @@ const WebScraperAssistant = () => {
     }
   };
 
-  useEffect(() => {
-    fetchScrapingHistory();
-    simulateCurrentTab();
-  }, [user]);
-
   const simulateCurrentTab = () => {
     const mockUrls = [
       'https://www.linkedin.com/jobs/view/3234567890',
@@ -69,6 +64,11 @@ const WebScraperAssistant = () => {
     ];
     setCurrentUrl(mockUrls[Math.floor(Math.random() * mockUrls.length)]);
   };
+
+  useEffect(() => {
+    fetchScrapingHistory();
+    simulateCurrentTab();
+  }, [user, fetchScrapingHistory]);
 
   const scrapeCurrentPage = async () => {
     if (!currentUrl) {

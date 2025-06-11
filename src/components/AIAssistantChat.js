@@ -41,7 +41,7 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     if (isOpen && messages.length === 0) {
       initializeChat();
     }
-  }, [isOpen, messages.length]);
+  }, [isOpen, messages.length, initializeChat]);
 
   useEffect(() => {
     scrollToBottom();

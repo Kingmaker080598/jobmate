@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { LockKeyhole, UserPlus2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import FuturisticLayout from '@/components/FuturisticLayout';
 
 export default function AuthPage() {
@@ -68,13 +69,13 @@ export default function AuthPage() {
     return () => {
       authListener?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [handleExtensionLogin]);
 
   useEffect(() => {
     if (user) {
       handleExtensionLogin();
     }
-  }, [user]);
+  }, [user, handleExtensionLogin]);
 
   const resetFields = () => {
     setName('');
@@ -246,10 +247,11 @@ export default function AuthPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <img
+              <Image
                 src="/google_logo.png"
                 alt="Google Logo"
-                className="w-5 h-5"
+                width={20}
+                height={20}
               />
               <span>Sign in with Google</span>
             </motion.button>

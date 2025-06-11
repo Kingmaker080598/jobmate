@@ -81,7 +81,7 @@ const AIResumeTailoringCopilot = () => {
       localStorage.removeItem('jobDescriptionForTailoring');
       toast.success('📥 Job description loaded from scraper!');
     }
-  }, [user]);
+  }, [user, fetchLatestResume]);
 
   const analyzeJobDescription = async () => {
     if (!jobDescription.trim()) {
