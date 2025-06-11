@@ -14,7 +14,9 @@ import {
   Wand2,
   Brain,
   Zap,
-  TrendingUp
+  TrendingUp,
+  FileText,
+  Upload
 } from 'lucide-react';
 import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -60,11 +62,20 @@ const AIResumeTailoringCopilot = () => {
           try {
             const response = await fetch(resume.resume_url);
             const text = await response.text();
-            setResumeContent(text);
+            
+            // Check if the fetched content is readable text
+            if (isReadableText(text)) {
+              setResumeContent(text);
+            } else {
+              toast.error('Resume file format not supported. Please upload a text-based resume.');
+            }
           } catch (err) {
             console.error('Error fetching resume content:', err);
+            toast.error('Could not load resume content. Please upload a new resume.');
           }
         }
+      } else {
+        toast.info('No resume found. Please upload your resume first.');
       }
     } catch (error) {
       console.error('Error fetching resume:', error);
@@ -82,6 +93,49 @@ const AIResumeTailoringCopilot = () => {
       toast.success('📥 Job description loaded from scraper!');
     }
   }, [fetchLatestResume]);
+
+  const isReadableText = (text) => {
+    if (!text || text.length < 10) return false;
+    
+    // Check for PDF or binary content
+    if (text.includes('%PDF') || text.includes('endobj') || text.includes('stream')) {
+      return false;
+    }
+    
+    // Check if content is mostly readable
+    const readableChars = text.match(/[a-zA-Z0-9\s.,!?;:()\-]/g);
+    const totalChars = text.length;
+    
+    if (readableChars && totalChars > 0) {
+      const readableRatio = readableChars.length / totalChars;
+      return readableRatio > 0.7;
+    }
+    
+    return false;
+  };
+
+  const handleResumeUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    if (file.type !== 'text/plain' && !file.name.endsWith('.txt')) {
+      toast.error('Please upload a .txt file for best results. PDF files may not work properly.');
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      if (isReadableText(text)) {
+        setResumeContent(text);
+        toast.success('✅ Resume uploaded successfully!');
+      } else {
+        toast.error('File content is not readable. Please upload a plain text resume.');
+      }
+    } catch (error) {
+      toast.error('Failed to read file. Please try again.');
+    }
+  };
 
   const analyzeJobDescription = async () => {
     if (!jobDescription.trim()) {
@@ -125,6 +179,11 @@ const AIResumeTailoringCopilot = () => {
       return;
     }
 
+    if (!isReadableText(resumeContent)) {
+      toast.error('Resume content is not in a readable format. Please upload a plain text resume.');
+      return;
+    }
+
     setLoading(true);
     setStep(4);
 
@@ -143,16 +202,21 @@ const AIResumeTailoringCopilot = () => {
       const data = await response.json();
       
       if (response.ok) {
-        setTailoredResume(data.tailoredResume);
-        setMatchScore(data.newMatchScore || matchScore + 25);
-        setStep(5);
-        toast.success('🎉 Resume tailored successfully!');
+        // Validate the returned resume is readable text
+        if (isReadableText(data.tailoredResume)) {
+          setTailoredResume(data.tailoredResume);
+          setMatchScore(data.newMatchScore || matchScore + 25);
+          setStep(5);
+          toast.success('🎉 Resume tailored successfully!');
+        } else {
+          throw new Error('Generated resume is not in readable format');
+        }
       } else {
         throw new Error(data.error || 'Tailoring failed');
       }
     } catch (error) {
       console.error('Tailoring error:', error);
-      toast.error('Failed to tailor resume');
+      toast.error('Failed to tailor resume. Please try with a plain text resume.');
       setStep(3);
     } finally {
       setLoading(false);
@@ -269,10 +333,40 @@ const AIResumeTailoringCopilot = () => {
         >
           <div className="flex items-center gap-4 mb-8">
             <Target className="w-8 h-8 text-blue-600" />
-            <h2 className="text-3xl font-bold text-gray-900">Step 1: Job Description Analysis</h2>
+            <h2 className="text-3xl font-bold text-gray-900">Step 1: Setup & Job Analysis</h2>
+          </div>
+          
+          {/* Resume Upload Section */}
+          <div className="mb-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">Upload Your Resume (Recommended)</h3>
+            <p className="text-gray-600 mb-4">For best results, upload a plain text (.txt) version of your resume:</p>
+            <div className="flex items-center gap-4">
+              <label className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg cursor-pointer transition-colors">
+                <Upload className="w-5 h-5 inline mr-2" />
+                Choose Resume File
+                <input
+                  type="file"
+                  accept=".txt,text/plain"
+                  onChange={handleResumeUpload}
+                  className="hidden"
+                />
+              </label>
+              {resumeContent && (
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Resume loaded ({resumeContent.length} characters)</span>
+                </div>
+              )}
+            </div>
+            {!resumeContent && (
+              <p className="text-sm text-gray-500 mt-2">
+                💡 Tip: Convert your PDF resume to plain text for optimal AI processing
+              </p>
+            )}
           </div>
           
           <div className="mb-8">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">Job Description</h3>
             <textarea
               className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Paste the complete job description here..."
@@ -466,6 +560,17 @@ const AIResumeTailoringCopilot = () => {
                 Edit Job Description
               </motion.button>
             </div>
+
+            {!resumeContent && (
+              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                  <p className="text-yellow-800">
+                    <strong>No resume detected.</strong> Please upload a plain text resume for optimal results.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -618,18 +723,6 @@ const AIResumeTailoringCopilot = () => {
                 <div className="flex items-center gap-3">
                   <Download className="w-5 h-5" />
                   Download TXT
-                </div>
-              </motion.button>
-              
-              <motion.button
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-4 rounded-lg border border-gray-300 transition-colors"
-                onClick={() => downloadResume('pdf')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className="flex items-center gap-3">
-                  <Download className="w-5 h-5" />
-                  Download PDF
                 </div>
               </motion.button>
               
