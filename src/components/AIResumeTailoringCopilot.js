@@ -24,7 +24,7 @@ import {
 import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 const AIResumeTailoringCopilot = () => {
   const { user } = useUser();
