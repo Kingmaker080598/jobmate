@@ -16,7 +16,10 @@ import {
   Zap,
   TrendingUp,
   FileText,
-  Upload
+  Upload,
+  File,
+  FileImage,
+  X
 } from 'lucide-react';
 import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -27,6 +30,8 @@ const AIResumeTailoringCopilot = () => {
   const { user } = useUser();
   const [jobDescription, setJobDescription] = useState('');
   const [resumeContent, setResumeContent] = useState('');
+  const [originalFileName, setOriginalFileName] = useState('');
+  const [originalFileType, setOriginalFileType] = useState('');
   const [tailoredResume, setTailoredResume] = useState('');
   const [matchScore, setMatchScore] = useState(0);
   const [keywords, setKeywords] = useState([]);
@@ -35,12 +40,21 @@ const AIResumeTailoringCopilot = () => {
   const [step, setStep] = useState(1);
   const [showComparison, setShowComparison] = useState(false);
   const [toneStyle, setToneStyle] = useState('professional');
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [processingFile, setProcessingFile] = useState(false);
 
   const toneOptions = [
     { value: 'professional', label: 'Professional', desc: 'Formal and corporate tone', gradient: 'from-blue-500 to-cyan-500' },
     { value: 'enthusiastic', label: 'Enthusiastic', desc: 'Energetic and passionate', gradient: 'from-orange-500 to-red-500' },
     { value: 'concise', label: 'Concise', desc: 'Brief and to the point', gradient: 'from-green-500 to-teal-500' },
     { value: 'technical', label: 'Technical', desc: 'Detail-oriented and precise', gradient: 'from-purple-500 to-pink-500' }
+  ];
+
+  const supportedFormats = [
+    { ext: '.txt', type: 'text/plain', icon: FileText, color: 'blue', desc: 'Plain Text (Recommended)' },
+    { ext: '.pdf', type: 'application/pdf', icon: File, color: 'red', desc: 'PDF Document' },
+    { ext: '.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', icon: FileImage, color: 'blue', desc: 'Word Document' },
+    { ext: '.doc', type: 'application/msword', icon: FileImage, color: 'blue', desc: 'Legacy Word Document' }
   ];
 
   const fetchLatestResume = useCallback(async () => {
@@ -58,24 +72,24 @@ const AIResumeTailoringCopilot = () => {
         const resume = data[0];
         if (resume.content) {
           setResumeContent(resume.content);
+          setOriginalFileName(resume.file_name || 'Previous Resume');
+          setOriginalFileType('text/plain');
         } else if (resume.resume_url) {
           try {
             const response = await fetch(resume.resume_url);
             const text = await response.text();
             
-            // Check if the fetched content is readable text
             if (isReadableText(text)) {
               setResumeContent(text);
+              setOriginalFileName(resume.file_name || 'Previous Resume');
+              setOriginalFileType(resume.file_type || 'text/plain');
             } else {
-              toast.error('Resume file format not supported. Please upload a text-based resume.');
+              toast.info('Previous resume needs to be re-uploaded in a supported format.');
             }
           } catch (err) {
             console.error('Error fetching resume content:', err);
-            toast.error('Could not load resume content. Please upload a new resume.');
           }
         }
-      } else {
-        toast.info('No resume found. Please upload your resume first.');
       }
     } catch (error) {
       console.error('Error fetching resume:', error);
@@ -114,27 +128,80 @@ const AIResumeTailoringCopilot = () => {
     return false;
   };
 
+  const processFile = async (file) => {
+    setProcessingFile(true);
+    toast.loading('Processing your resume...', { id: 'process' });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/process-resume', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.content) {
+        setResumeContent(data.content);
+        setOriginalFileName(file.name);
+        setOriginalFileType(file.type);
+        setUploadedFile(file);
+        toast.success('✅ Resume processed successfully!', { id: 'process' });
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to process file');
+      }
+    } catch (error) {
+      console.error('File processing error:', error);
+      toast.error(`Failed to process ${file.name}: ${error.message}`, { id: 'process' });
+      return false;
+    } finally {
+      setProcessingFile(false);
+    }
+  };
+
   const handleResumeUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file type
-    if (file.type !== 'text/plain' && !file.name.endsWith('.txt')) {
-      toast.error('Please upload a .txt file for best results. PDF files may not work properly.');
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
       return;
     }
 
-    try {
-      const text = await file.text();
-      if (isReadableText(text)) {
-        setResumeContent(text);
-        toast.success('✅ Resume uploaded successfully!');
-      } else {
-        toast.error('File content is not readable. Please upload a plain text resume.');
-      }
-    } catch (error) {
-      toast.error('Failed to read file. Please try again.');
+    // Check file type
+    const supportedTypes = supportedFormats.map(f => f.type);
+    if (!supportedTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|docx|doc)$/i)) {
+      toast.error('Please upload a supported file format: TXT, PDF, DOC, or DOCX');
+      return;
     }
+
+    // For text files, process directly
+    if (file.type === 'text/plain') {
+      try {
+        const text = await file.text();
+        if (isReadableText(text)) {
+          setResumeContent(text);
+          setOriginalFileName(file.name);
+          setOriginalFileType(file.type);
+          setUploadedFile(file);
+          toast.success('✅ Resume uploaded successfully!');
+        } else {
+          toast.error('File content is not readable. Please check your file.');
+        }
+      } catch (error) {
+        toast.error('Failed to read file. Please try again.');
+      }
+    } else {
+      // For PDF/DOC files, use the processing API
+      await processFile(file);
+    }
+
+    // Clear the input
+    event.target.value = '';
   };
 
   const analyzeJobDescription = async () => {
@@ -180,7 +247,7 @@ const AIResumeTailoringCopilot = () => {
     }
 
     if (!isReadableText(resumeContent)) {
-      toast.error('Resume content is not in a readable format. Please upload a plain text resume.');
+      toast.error('Resume content is not in a readable format. Please upload a different file.');
       return;
     }
 
@@ -202,7 +269,6 @@ const AIResumeTailoringCopilot = () => {
       const data = await response.json();
       
       if (response.ok) {
-        // Validate the returned resume is readable text
         if (isReadableText(data.tailoredResume)) {
           setTailoredResume(data.tailoredResume);
           setMatchScore(data.newMatchScore || matchScore + 25);
@@ -216,7 +282,7 @@ const AIResumeTailoringCopilot = () => {
       }
     } catch (error) {
       console.error('Tailoring error:', error);
-      toast.error('Failed to tailor resume. Please try with a plain text resume.');
+      toast.error('Failed to tailor resume. Please try again.');
       setStep(3);
     } finally {
       setLoading(false);
@@ -248,16 +314,61 @@ const AIResumeTailoringCopilot = () => {
     }
   };
 
-  const downloadResume = (format = 'txt') => {
+  const downloadResume = async (format = 'txt') => {
     if (!tailoredResume) return;
 
-    const blob = new Blob([tailoredResume], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tailored_resume.${format}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      if (format === 'txt') {
+        const blob = new Blob([tailoredResume], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tailored_resume.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (format === 'pdf') {
+        // Call API to convert to PDF
+        const response = await fetch('/api/convert-to-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: tailoredResume, filename: 'tailored_resume' })
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tailored_resume.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          throw new Error('PDF conversion failed');
+        }
+      } else if (format === 'docx') {
+        // Call API to convert to DOCX
+        const response = await fetch('/api/convert-to-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: tailoredResume, filename: 'tailored_resume' })
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tailored_resume.docx`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          throw new Error('DOCX conversion failed');
+        }
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error(`Failed to download ${format.toUpperCase()} file`);
+    }
   };
 
   const copyToClipboard = () => {
@@ -272,6 +383,14 @@ const AIResumeTailoringCopilot = () => {
     setMatchScore(0);
     setKeywords([]);
     setSuggestions([]);
+  };
+
+  const removeUploadedFile = () => {
+    setResumeContent('');
+    setOriginalFileName('');
+    setOriginalFileType('');
+    setUploadedFile(null);
+    toast.info('Resume removed. Upload a new file to continue.');
   };
 
   const StepIndicator = ({ currentStep }) => (
@@ -318,7 +437,7 @@ const AIResumeTailoringCopilot = () => {
           <Brain className="w-12 h-12 text-purple-500" />
         </div>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Transform your resume with AI precision - match any job in seconds
+          Transform your resume with AI precision - supports TXT, PDF, and DOCX formats
         </p>
       </motion.div>
 
@@ -338,30 +457,75 @@ const AIResumeTailoringCopilot = () => {
           
           {/* Resume Upload Section */}
           <div className="mb-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">Upload Your Resume (Recommended)</h3>
-            <p className="text-gray-600 mb-4">For best results, upload a plain text (.txt) version of your resume:</p>
-            <div className="flex items-center gap-4">
-              <label className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg cursor-pointer transition-colors">
-                <Upload className="w-5 h-5 inline mr-2" />
-                Choose Resume File
-                <input
-                  type="file"
-                  accept=".txt,text/plain"
-                  onChange={handleResumeUpload}
-                  className="hidden"
-                />
-              </label>
-              {resumeContent && (
-                <div className="flex items-center gap-2 text-green-600">
-                  <CheckCircle className="w-5 h-5" />
-                  <span>Resume loaded ({resumeContent.length} characters)</span>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">Upload Your Resume</h3>
+            <p className="text-gray-600 mb-6">
+              Upload your resume in any supported format. Our AI will extract and process the content automatically.
+            </p>
+            
+            {/* Supported Formats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {supportedFormats.map((format) => (
+                <div key={format.ext} className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                  <format.icon className={`w-8 h-8 text-${format.color}-500 mx-auto mb-2`} />
+                  <div className="text-sm font-semibold text-gray-900">{format.ext.toUpperCase()}</div>
+                  <div className="text-xs text-gray-500">{format.desc}</div>
                 </div>
-              )}
+              ))}
             </div>
-            {!resumeContent && (
-              <p className="text-sm text-gray-500 mt-2">
-                💡 Tip: Convert your PDF resume to plain text for optimal AI processing
-              </p>
+
+            {/* Upload Area */}
+            {!resumeContent ? (
+              <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                <label className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg cursor-pointer transition-colors inline-block">
+                  {processingFile ? (
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      Processing...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-5 h-5" />
+                      Choose Resume File
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept=".txt,.pdf,.doc,.docx,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={handleResumeUpload}
+                    className="hidden"
+                    disabled={processingFile}
+                  />
+                </label>
+                <p className="text-sm text-gray-500 mt-4">
+                  Supports TXT, PDF, DOC, and DOCX files (max 10MB)
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white border border-green-200 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{originalFileName}</h4>
+                      <p className="text-sm text-gray-500">
+                        {resumeContent.length} characters • {originalFileType}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={removeUploadedFile}
+                    className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-32 overflow-y-auto">
+                  <p className="text-sm text-gray-700 line-clamp-4">
+                    {resumeContent.substring(0, 200)}...
+                  </p>
+                </div>
+              </div>
             )}
           </div>
           
@@ -566,7 +730,7 @@ const AIResumeTailoringCopilot = () => {
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-yellow-600" />
                   <p className="text-yellow-800">
-                    <strong>No resume detected.</strong> Please upload a plain text resume for optimal results.
+                    <strong>No resume detected.</strong> Please upload your resume to continue with AI tailoring.
                   </p>
                 </div>
               </div>
@@ -723,6 +887,30 @@ const AIResumeTailoringCopilot = () => {
                 <div className="flex items-center gap-3">
                   <Download className="w-5 h-5" />
                   Download TXT
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-4 rounded-lg border border-gray-300 transition-colors"
+                onClick={() => downloadResume('pdf')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  Download PDF
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-4 rounded-lg border border-gray-300 transition-colors"
+                onClick={() => downloadResume('docx')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  Download DOCX
                 </div>
               </motion.button>
               
