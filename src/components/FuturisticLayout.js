@@ -4,8 +4,12 @@ import { motion } from 'framer-motion';
 const FuturisticLayout = ({ children }) => {
   const [particles, setParticles] = useState([]);
   const [matrixChars, setMatrixChars] = useState([]);
+  const [windowHeight, setWindowHeight] = useState(800); // Default fallback value
 
   useEffect(() => {
+    // Set window height after component mounts on client-side
+    setWindowHeight(window.innerHeight);
+
     // Generate particles
     const particleArray = [];
     for (let i = 0; i < 50; i++) {
@@ -72,7 +76,7 @@ const FuturisticLayout = ({ children }) => {
       <motion.div
         className="fixed top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
         animate={{
-          y: [0, window.innerHeight || 800]
+          y: [0, windowHeight]
         }}
         transition={{
           duration: 3,
