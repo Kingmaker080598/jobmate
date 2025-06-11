@@ -6,19 +6,17 @@ import {
   Download, 
   Eye, 
   RefreshCw, 
-  CheckCircle, 
-  AlertTriangle,
+  CheckCircle,
   Building,
   MapPin,
   DollarSign,
   Clock,
   Target,
   Sparkles,
-  Zap,
   Brain,
   TrendingUp
 } from 'lucide-react';
-import { Typography, Button, TextField, Chip, Card, CardContent } from '@mui/material';
+import { Chip } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
@@ -27,7 +25,6 @@ const WebScraperAssistant = () => {
   const { user } = useUser();
   const [currentUrl, setCurrentUrl] = useState('');
   const [scrapedData, setScrapedData] = useState(null);
-  const [isScrapingActive, setIsScrapingActive] = useState(false);
   const [scrapingHistory, setScrapingHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +36,25 @@ const WebScraperAssistant = () => {
     { name: 'Remote.co', pattern: 'remote.co', icon: Globe, color: 'teal', gradient: 'from-teal-500 to-cyan-500' },
     { name: 'ZipRecruiter', pattern: 'ziprecruiter.com', icon: Search, color: 'red', gradient: 'from-red-500 to-pink-500' }
   ];
+
+  const fetchScrapingHistory = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('scraping_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (data) {
+        setScrapingHistory(data);
+      }
+    } catch (error) {
+      console.error('Error fetching scraping history:', error);
+    }
+  };
 
   useEffect(() => {
     fetchScrapingHistory();
@@ -52,25 +68,6 @@ const WebScraperAssistant = () => {
       'https://www.glassdoor.com/job-listing/software-engineer-google-JV_IC1147401_KO0,17_KE18,24.htm'
     ];
     setCurrentUrl(mockUrls[Math.floor(Math.random() * mockUrls.length)]);
-  };
-
-  const fetchScrapingHistory = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('scraping_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (data) {
-        setScrapingHistory(data);
-      }
-    } catch (error) {
-      console.error('Error fetching scraping history:', error);
-    }
   };
 
   const scrapeCurrentPage = async () => {

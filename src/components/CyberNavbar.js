@@ -11,7 +11,6 @@ import {
   BarChart3, 
   User, 
   Clock,
-  Settings,
   Sparkles,
   Globe,
   Zap,

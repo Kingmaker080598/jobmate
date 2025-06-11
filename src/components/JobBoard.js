@@ -4,7 +4,6 @@ import { useUser } from '@/contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Filter, 
   MapPin, 
   Clock, 
   DollarSign, 
@@ -12,7 +11,6 @@ import {
   ExternalLink,
   Heart,
   Send,
-  Eye,
   Bookmark,
   TrendingUp,
   Users,
@@ -31,20 +29,10 @@ const JobBoard = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [salaryFilter, setSalaryFilter] = useState('');
   const [experienceFilter, setExperienceFilter] = useState('');
-  const [companyFilter, setCompanyFilter] = useState('');
   const [jobTypeFilter, setJobTypeFilter] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
   const [savedJobs, setSavedJobs] = useState(new Set());
   const [appliedJobs, setAppliedJobs] = useState(new Set());
-
-  useEffect(() => {
-    fetchJobs();
-    fetchUserJobData();
-  }, [user]);
-
-  useEffect(() => {
-    filterJobs();
-  }, [jobs, searchTerm, locationFilter, salaryFilter, experienceFilter, companyFilter, jobTypeFilter]);
 
   const fetchJobs = async () => {
     try {
@@ -119,12 +107,6 @@ const JobBoard = () => {
       );
     }
 
-    if (companyFilter) {
-      filtered = filtered.filter(job => 
-        job.company.toLowerCase().includes(companyFilter.toLowerCase())
-      );
-    }
-
     if (jobTypeFilter) {
       filtered = filtered.filter(job => 
         job.job_type === jobTypeFilter
@@ -133,6 +115,15 @@ const JobBoard = () => {
 
     setFilteredJobs(filtered);
   };
+
+  useEffect(() => {
+    fetchJobs();
+    fetchUserJobData();
+  }, [user]);
+
+  useEffect(() => {
+    filterJobs();
+  }, [jobs, searchTerm, locationFilter, salaryFilter, experienceFilter, jobTypeFilter]);
 
   const handleSaveJob = async (jobId) => {
     if (!user) {

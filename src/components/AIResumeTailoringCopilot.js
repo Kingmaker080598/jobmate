@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Sparkles, 
-  FileText, 
   Target, 
   Download, 
   Save, 
@@ -17,7 +16,7 @@ import {
   Zap,
   TrendingUp
 } from 'lucide-react';
-import { Typography, Button, TextField, Chip, LinearProgress, Dialog, DialogContent } from '@mui/material';
+import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
@@ -34,7 +33,6 @@ const AIResumeTailoringCopilot = () => {
   const [step, setStep] = useState(1);
   const [showComparison, setShowComparison] = useState(false);
   const [toneStyle, setToneStyle] = useState('professional');
-  const [analysisData, setAnalysisData] = useState(null);
 
   const toneOptions = [
     { value: 'professional', label: 'Professional', desc: 'Formal and corporate tone', gradient: 'from-blue-500 to-cyan-500' },
@@ -43,23 +41,11 @@ const AIResumeTailoringCopilot = () => {
     { value: 'technical', label: 'Technical', desc: 'Detail-oriented and precise', gradient: 'from-purple-500 to-pink-500' }
   ];
 
-  useEffect(() => {
-    fetchLatestResume();
-    
-    // Check for data from scraper
-    const scrapedJobDescription = localStorage.getItem('jobDescriptionForTailoring');
-    if (scrapedJobDescription) {
-      setJobDescription(scrapedJobDescription);
-      localStorage.removeItem('jobDescriptionForTailoring');
-      toast.success('📥 Job description loaded from scraper!');
-    }
-  }, [user]);
-
   const fetchLatestResume = async () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('resume_history')
         .select('*')
         .eq('user_id', user.id)
@@ -85,6 +71,18 @@ const AIResumeTailoringCopilot = () => {
     }
   };
 
+  useEffect(() => {
+    fetchLatestResume();
+    
+    // Check for data from scraper
+    const scrapedJobDescription = localStorage.getItem('jobDescriptionForTailoring');
+    if (scrapedJobDescription) {
+      setJobDescription(scrapedJobDescription);
+      localStorage.removeItem('jobDescriptionForTailoring');
+      toast.success('📥 Job description loaded from scraper!');
+    }
+  }, [user]);
+
   const analyzeJobDescription = async () => {
     if (!jobDescription.trim()) {
       toast.error('Please paste a job description first');
@@ -107,7 +105,6 @@ const AIResumeTailoringCopilot = () => {
         setKeywords(data.keywords || []);
         setSuggestions(data.suggestions || []);
         setMatchScore(data.matchScore || 0);
-        setAnalysisData(data);
         setStep(3);
         toast.success('✨ Job analysis complete!');
       } else {
@@ -211,7 +208,6 @@ const AIResumeTailoringCopilot = () => {
     setMatchScore(0);
     setKeywords([]);
     setSuggestions([]);
-    setAnalysisData(null);
   };
 
   const StepIndicator = ({ currentStep }) => (

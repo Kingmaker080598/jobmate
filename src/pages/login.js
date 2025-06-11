@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/router';
-import { LockKeyhole, UserPlus2, Mail, Eye, EyeOff } from 'lucide-react';
+import { LockKeyhole, UserPlus2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Typography } from '@mui/material';
 import Link from 'next/link';
 import FuturisticLayout from '@/components/FuturisticLayout';
 
@@ -17,6 +16,37 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
+
+  const handleExtensionLogin = async () => {
+    try {
+      if (!user) return;
+      
+      const tokenData = {
+        userId: user.id,
+        exp: Date.now() + (24 * 60 * 60 * 1000)
+      };
+      
+      const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
+      localStorage.setItem('jobmate_extension_token', token);
+      
+      if (typeof window !== 'undefined') {
+        const isExtension = document.referrer.includes('chrome-extension://');
+        
+        if (isExtension) {
+          window.postMessage({ 
+            type: 'JOBMATE_LOGIN_SUCCESS', 
+            token: token 
+          }, '*');
+          
+          setTimeout(() => {
+            window.close();
+          }, 1000);
+        }
+      }
+    } catch (error) {
+      console.error('Extension login error:', error);
+    }
+  };
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -39,6 +69,12 @@ export default function AuthPage() {
       authListener?.subscription?.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      handleExtensionLogin();
+    }
+  }, [user]);
 
   const resetFields = () => {
     setName('');
@@ -93,43 +129,6 @@ export default function AuthPage() {
     resetFields();
     router.push('/home');
   };
-
-  async function handleExtensionLogin() {
-    try {
-      if (!user) return;
-      
-      const tokenData = {
-        userId: user.id,
-        exp: Date.now() + (24 * 60 * 60 * 1000)
-      };
-      
-      const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
-      localStorage.setItem('jobmate_extension_token', token);
-      
-      if (typeof window !== 'undefined') {
-        const isExtension = document.referrer.includes('chrome-extension://');
-        
-        if (isExtension) {
-          window.postMessage({ 
-            type: 'JOBMATE_LOGIN_SUCCESS', 
-            token: token 
-          }, '*');
-          
-          setTimeout(() => {
-            window.close();
-          }, 1000);
-        }
-      }
-    } catch (error) {
-      console.error('Extension login error:', error);
-    }
-  }
-  
-  useEffect(() => {
-    if (user) {
-      handleExtensionLogin();
-    }
-  }, [user]);
 
   return (
     <FuturisticLayout>

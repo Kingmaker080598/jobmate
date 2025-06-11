@@ -8,21 +8,14 @@ import {
   Building, 
   MapPin, 
   DollarSign, 
-  Clock, 
-  Edit, 
   Trash2, 
-  ExternalLink,
-  Phone,
-  Mail,
-  FileText,
-  Star
+  ExternalLink
 } from 'lucide-react';
 import { Typography, Button, Chip, Dialog, DialogTitle, DialogContent, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import toast from 'react-hot-toast';
 
 const ApplicationTracker = () => {
   const { user } = useUser();
-  const [applications, setApplications] = useState([]);
   const [columns, setColumns] = useState({
     applied: { id: 'applied', title: 'Applied', items: [] },
     screening: { id: 'screening', title: 'Phone/Video Screening', items: [] },
@@ -44,12 +37,6 @@ const ApplicationTracker = () => {
     status: 'applied',
     applied_date: new Date().toISOString().split('T')[0]
   });
-
-  useEffect(() => {
-    if (user) {
-      fetchApplications();
-    }
-  }, [user]);
 
   const fetchApplications = async () => {
     try {
@@ -79,12 +66,17 @@ const ApplicationTracker = () => {
       });
 
       setColumns(organized);
-      setApplications(data);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchApplications();
+    }
+  }, [user]);
 
   const updateApplicationStatus = async (applicationId, newStatus) => {
     try {
@@ -188,18 +180,6 @@ const ApplicationTracker = () => {
   };
 
   const ApplicationCard = ({ application }) => {
-    const getStatusColor = (status) => {
-      const colors = {
-        applied: 'bg-blue-100 text-blue-800',
-        screening: 'bg-yellow-100 text-yellow-800',
-        interview: 'bg-purple-100 text-purple-800',
-        final: 'bg-orange-100 text-orange-800',
-        offer: 'bg-green-100 text-green-800',
-        rejected: 'bg-red-100 text-red-800'
-      };
-      return colors[status] || 'bg-gray-100 text-gray-800';
-    };
-
     return (
       <motion.div
         layout

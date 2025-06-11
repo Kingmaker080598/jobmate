@@ -1,5 +1,4 @@
 import puppeteer from 'puppeteer';
-import cheerio from 'cheerio';
 import { supabase } from '@/lib/supabaseClient';
 
 export default async function handler(req, res) {

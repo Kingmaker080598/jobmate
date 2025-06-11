@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Download, 
@@ -7,10 +6,7 @@ import {
   Globe, 
   Building, 
   RefreshCw, 
-  CheckCircle, 
-  AlertCircle,
-  Play,
-  Pause,
+  CheckCircle,
   Settings
 } from 'lucide-react';
 import { Typography, Button, TextField, Switch, FormControlLabel, Chip } from '@mui/material';

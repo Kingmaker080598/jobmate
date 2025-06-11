@@ -3,20 +3,14 @@ import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/contexts/UserContext';
 import { motion } from 'framer-motion';
 import { 
-  Play, 
-  Pause, 
-  Settings, 
   Target, 
   Clock, 
   CheckCircle, 
   XCircle, 
   AlertTriangle,
-  TrendingUp,
-  Filter,
-  Calendar,
-  BarChart3
+  Filter
 } from 'lucide-react';
-import { Typography, Button, Switch, FormControlLabel, Chip, LinearProgress } from '@mui/material';
+import { Typography, Button, Switch, FormControlLabel, Chip } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import toast from 'react-hot-toast';
 
@@ -32,14 +26,7 @@ const AutoApplyDashboard = () => {
     successRate: 0
   });
   const [campaigns, setCampaigns] = useState([]);
-  const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchAutoApplyData();
-    }
-  }, [user]);
 
   const fetchAutoApplyData = async () => {
     try {
@@ -78,6 +65,12 @@ const AutoApplyDashboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchAutoApplyData();
+    }
+  }, [user]);
 
   const calculateStats = (apps) => {
     const total = apps.length;
@@ -140,7 +133,6 @@ const AutoApplyDashboard = () => {
       if (error) throw error;
 
       setCampaigns(prev => [...prev, data]);
-      setSelectedCampaign(data);
       toast.success('Campaign created successfully');
     } catch (error) {
       console.error('Error creating campaign:', error);

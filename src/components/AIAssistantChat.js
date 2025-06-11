@@ -1,21 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MessageCircle, 
   Send, 
   Bot, 
   User, 
   Sparkles, 
   X, 
-  RefreshCw,
   Lightbulb,
   Target,
   FileText,
   TrendingUp,
-  Brain,
-  Zap
+  Brain
 } from 'lucide-react';
-import { Typography, TextField, Button, Chip } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 
 const AIAssistantChat = ({ isOpen, onClose }) => {
@@ -32,20 +28,6 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     { icon: Lightbulb, label: 'Career advice', action: 'career_advice', gradient: 'from-orange-500 to-red-500' }
   ];
 
-  useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      initializeChat();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const initializeChat = () => {
     const welcomeMessage = {
       id: Date.now(),
@@ -54,6 +36,20 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
+  };
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      initializeChat();
+    }
+  }, [isOpen, messages.length, initializeChat]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSendMessage = async (content = inputMessage) => {

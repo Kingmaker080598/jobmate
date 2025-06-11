@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Typography, Button as MuiButton } from '@mui/material';
-import { Rocket, FileText, Brain, ShieldCheck, Lightbulb, Clock, ClipboardCheck, Sparkles, Zap, Target } from 'lucide-react';
+import { Rocket, FileText, Brain, Lightbulb, Clock, ClipboardCheck, Sparkles, Zap, Target } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -86,7 +84,7 @@ export default function LandingPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           <p className="text-2xl text-gray-300 max-w-4xl mx-auto mb-16 elegant-text">
-            Transform your job hunt with JobMate's intelligent AI copilot. Upload once, dominate everywhere.
+            Transform your job hunt with JobMate&apos;s intelligent AI copilot. Upload once, dominate everywhere.
           </p>
         </motion.div>
 
@@ -195,7 +193,7 @@ export default function LandingPage() {
             Why Choose JobMate?
           </h2>
           <p className="text-xl text-gray-300 elegant-text max-w-3xl mx-auto">
-            Elevate your career with AI that's fast, precise, and designed for success. JobMate is your edge in the job market.
+            Elevate your career with AI that&apos;s fast, precise, and designed for success. JobMate is your edge in the job market.
           </p>
         </motion.div>
 
@@ -251,7 +249,7 @@ export default function LandingPage() {
             Ready to Accelerate Your Career?
           </h2>
           <p className="text-xl text-gray-300 mb-12 elegant-text">
-            Join thousands of professionals who've transformed their job search with AI
+            Join thousands of professionals who&apos;ve transformed their job search with AI
           </p>
           <Link href="/login">
             <motion.button

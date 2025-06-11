@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { 
   Zap, 
   Settings, 
-  CheckCircle, 
-  AlertTriangle, 
   RefreshCw,
   Target,
   Globe,
@@ -18,7 +16,7 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
-import { Typography, Button, Switch, FormControlLabel, Chip, TextField } from '@mui/material';
+import { Switch, FormControlLabel, Chip } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
@@ -42,16 +40,11 @@ const SmartAutofillEngine = () => {
     { name: 'Workday', icon: Briefcase, color: 'indigo', pattern: 'workday.com', gradient: 'from-indigo-500 to-purple-500' }
   ];
 
-  useEffect(() => {
-    fetchProfile();
-    fetchFillHistory();
-  }, [user]);
-
   const fetchProfile = async () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('application_profile')
         .select('*')
         .eq('user_id', user.id)
@@ -69,7 +62,7 @@ const SmartAutofillEngine = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('autofill_history')
         .select('*')
         .eq('user_id', user.id)
@@ -83,6 +76,11 @@ const SmartAutofillEngine = () => {
       console.error('Error fetching fill history:', error);
     }
   };
+
+  useEffect(() => {
+    fetchProfile();
+    fetchFillHistory();
+  }, [user]);
 
   const analyzeCurrentPage = async () => {
     setIsAnalyzing(true);
@@ -204,6 +202,7 @@ const SmartAutofillEngine = () => {
       {platformDetected === platform.name && (
         <div className="mt-4 flex items-center gap-2">
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          
           <span className="text-xs text-green-400 font-mono">ACTIVE</span>
         </div>
       )}
