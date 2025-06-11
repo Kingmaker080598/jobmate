@@ -11,7 +11,6 @@ import {
   ExternalLink,
   Heart,
   Send,
-  Bookmark,
   TrendingUp,
   Users,
   Calendar,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Zap, 
@@ -40,7 +40,7 @@ const SmartAutofillEngine = () => {
     { name: 'Workday', icon: Briefcase, color: 'indigo', pattern: 'workday.com', gradient: 'from-indigo-500 to-purple-500' }
   ];
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -56,9 +56,9 @@ const SmartAutofillEngine = () => {
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
-  };
+  }, [user]);
 
-  const fetchFillHistory = async () => {
+  const fetchFillHistory = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -75,12 +75,12 @@ const SmartAutofillEngine = () => {
     } catch (error) {
       console.error('Error fetching fill history:', error);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchProfile();
     fetchFillHistory();
-  }, [user, fetchProfile, fetchFillHistory]);
+  }, [fetchProfile, fetchFillHistory]);
 
   const analyzeCurrentPage = async () => {
     setIsAnalyzing(true);
@@ -146,31 +146,31 @@ const SmartAutofillEngine = () => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="gradient-border p-6 hover-lift"
+      className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            field.confidence >= 90 ? 'bg-green-500/20 text-green-400' : 
-            field.confidence >= 70 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+            field.confidence >= 90 ? 'bg-green-100 text-green-600' : 
+            field.confidence >= 70 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
           }`}>
             <field.icon className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-semibold text-lg">{field.label}</h4>
-            <p className="text-sm text-gray-400">Type: {field.type} • ID: {field.id}</p>
+            <h4 className="font-semibold text-lg text-gray-900">{field.label}</h4>
+            <p className="text-sm text-gray-500">Type: {field.type} • ID: {field.id}</p>
           </div>
         </div>
         <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-          field.confidence >= 90 ? 'bg-green-500/20 text-green-400' : 
-          field.confidence >= 70 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+          field.confidence >= 90 ? 'bg-green-100 text-green-700' : 
+          field.confidence >= 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
         }`}>
           {field.confidence}%
         </div>
       </div>
       {field.value && (
-        <div className="glass-card p-4 border border-gray-400/30">
-          <p className="text-sm font-mono text-gray-300">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p className="text-sm font-mono text-gray-700">
             {field.value.length > 50 ? field.value.substring(0, 50) + '...' : field.value}
           </p>
         </div>
@@ -182,10 +182,10 @@ const SmartAutofillEngine = () => {
     <motion.div
       whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
-      className={`gradient-border p-6 cursor-pointer transition-all ${
+      className={`bg-white rounded-lg shadow-md border-2 p-6 cursor-pointer transition-all ${
         platformDetected === platform.name 
-          ? 'border-cyan-400 bg-cyan-400/10' 
-          : 'hover:border-purple-400/50'
+          ? 'border-blue-500 bg-blue-50' 
+          : 'border-gray-200 hover:border-gray-300'
       }`}
     >
       <div className="flex items-center gap-4">
@@ -193,24 +193,23 @@ const SmartAutofillEngine = () => {
           <platform.icon className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h4 className="font-bold text-lg">{platform.name}</h4>
-          <p className="text-sm text-gray-400">
+          <h4 className="font-bold text-lg text-gray-900">{platform.name}</h4>
+          <p className="text-sm text-gray-500">
             {platformDetected === platform.name ? 'Currently Detected' : 'Supported Platform'}
           </p>
         </div>
       </div>
       {platformDetected === platform.name && (
         <div className="mt-4 flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          
-          <span className="text-xs text-green-400 font-mono">ACTIVE</span>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span className="text-xs text-green-600 font-semibold">ACTIVE</span>
         </div>
       )}
     </motion.div>
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -218,23 +217,13 @@ const SmartAutofillEngine = () => {
         className="text-center mb-12"
       >
         <div className="flex items-center justify-center gap-4 mb-6">
-          <motion.div
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          >
-            <Zap className="w-12 h-12 text-yellow-400" />
-          </motion.div>
-          <h1 className="text-5xl md:text-7xl font-bold gradient-text cyber-heading">
-            Smart Autofill AI
+          <Zap className="w-12 h-12 text-yellow-500" />
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
+            Smart Autofill
           </h1>
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <Brain className="w-12 h-12 text-purple-400" />
-          </motion.div>
+          <Brain className="w-12 h-12 text-purple-500" />
         </div>
-        <p className="text-xl text-gray-300 elegant-text">
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Intelligent form filling that adapts to any job application platform
         </p>
       </motion.div>
@@ -243,12 +232,12 @@ const SmartAutofillEngine = () => {
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass-card p-8 mb-8 hover-lift"
+        className="bg-white rounded-lg shadow-lg p-8 mb-8"
       >
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-4">
-            <Settings className="w-8 h-8 text-cyan-400" />
-            <span className="gradient-text">Autofill Configuration</span>
+          <h2 className="text-3xl font-bold flex items-center gap-4 text-gray-900">
+            <Settings className="w-8 h-8 text-blue-600" />
+            Autofill Configuration
           </h2>
           <div className="flex items-center gap-4">
             <FormControlLabel
@@ -256,16 +245,15 @@ const SmartAutofillEngine = () => {
                 <Switch
                   checked={autofillEnabled}
                   onChange={(e) => setAutofillEnabled(e.target.checked)}
-                  className="cyber-switch"
                 />
               }
               label={
-                <span className="text-lg font-semibold">
+                <span className="text-lg font-semibold text-gray-700">
                   Smart Autofill {autofillEnabled ? 'Enabled' : 'Disabled'}
                 </span>
               }
             />
-            <div className={`w-3 h-3 rounded-full ${autofillEnabled ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
+            <div className={`w-3 h-3 rounded-full ${autofillEnabled ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
           </div>
         </div>
 
@@ -280,28 +268,24 @@ const SmartAutofillEngine = () => {
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass-card p-8 mb-8 hover-lift"
+        className="bg-white rounded-lg shadow-lg p-8 mb-8"
       >
-        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
-          <Target className="w-8 h-8 text-purple-400" />
-          <span className="gradient-text">Page Analysis & Detection</span>
+        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4 text-gray-900">
+          <Target className="w-8 h-8 text-purple-600" />
+          Page Analysis & Detection
         </h2>
 
         {!detectedFields.length ? (
           <div className="text-center py-16">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-8 flex items-center justify-center"
-            >
+            <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-8 flex items-center justify-center">
               <Globe className="w-12 h-12 text-white" />
-            </motion.div>
-            <h3 className="text-2xl font-bold mb-4 gradient-text">Ready to Analyze</h3>
-            <p className="text-gray-400 mb-8 text-lg">
+            </div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-900">Ready to Analyze</h3>
+            <p className="text-gray-600 mb-8 text-lg">
               Navigate to a job application page and let AI detect fillable fields
             </p>
             <motion.button
-              className="cyber-button text-lg px-12 py-4"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-12 py-4 rounded-lg text-lg transition-colors"
               onClick={analyzeCurrentPage}
               disabled={isAnalyzing}
               whileHover={{ scale: 1.05 }}
@@ -324,16 +308,16 @@ const SmartAutofillEngine = () => {
           <div>
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h3 className="text-2xl font-bold gradient-text">
+                <h3 className="text-2xl font-bold text-gray-900">
                   {platformDetected} Application Form
                 </h3>
-                <p className="text-gray-400 text-lg">
+                <p className="text-gray-600 text-lg">
                   {detectedFields.length} fields detected • {detectedFields.filter(f => f.confidence >= 90).length} high confidence
                 </p>
               </div>
               <div className="flex gap-4">
                 <motion.button
-                  className="glass-card px-6 py-3 border border-purple-400/50 hover:border-purple-400 transition-colors"
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg border border-gray-300 transition-colors"
                   onClick={analyzeCurrentPage}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -344,7 +328,7 @@ const SmartAutofillEngine = () => {
                   </div>
                 </motion.button>
                 <motion.button
-                  className="cyber-button px-8 py-3"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
                   onClick={performAutofill}
                   disabled={!profile}
                   whileHover={{ scale: 1.05 }}
@@ -378,18 +362,18 @@ const SmartAutofillEngine = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-8"
+        className="bg-white rounded-lg shadow-lg p-8"
       >
-        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
-          <Activity className="w-8 h-8 text-green-400" />
-          <span className="gradient-text">Autofill Performance History</span>
+        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4 text-gray-900">
+          <Activity className="w-8 h-8 text-green-600" />
+          Autofill Performance History
         </h2>
 
         {fillHistory.length === 0 ? (
           <div className="text-center py-12">
-            <TrendingUp className="w-16 h-16 text-gray-500 mx-auto mb-4 opacity-50" />
+            <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">No autofill history yet</p>
-            <p className="text-gray-600 text-sm">Start using autofill to see your performance metrics</p>
+            <p className="text-gray-400 text-sm">Start using autofill to see your performance metrics</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -399,26 +383,27 @@ const SmartAutofillEngine = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="gradient-border p-6 hover-lift"
+                className="bg-gray-50 border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
+                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
                     <div>
-                      <h4 className="font-bold text-lg">{entry.platform}</h4>
-                      <p className="text-gray-400">
+                      <h4 className="font-bold text-lg text-gray-900">{entry.platform}</h4>
+                      <p className="text-gray-600">
                         {entry.fields_filled} fields filled • {new Date(entry.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-sm text-gray-400">Success Rate</div>
-                      <div className="text-lg font-bold text-green-400">95%</div>
+                      <div className="text-sm text-gray-500">Success Rate</div>
+                      <div className="text-lg font-bold text-green-600">95%</div>
                     </div>
                     <Chip 
                       label={entry.success ? 'Success' : 'Failed'} 
-                      className={entry.success ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}
+                      color={entry.success ? 'success' : 'error'}
+                      variant="outlined"
                     />
                   </div>
                 </div>

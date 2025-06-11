@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useRouter } from 'next/router';
-import CyberNavbar from '@/components/CyberNavbar';
-import FuturisticLayout from '@/components/FuturisticLayout';
-import AIAssistantChat from '@/components/AIAssistantChat';
+import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
@@ -21,7 +19,8 @@ import {
   Activity,
   Clock,
   CheckCircle2,
-  ArrowUpRight
+  ArrowUpRight,
+  User
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -41,14 +40,12 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <FuturisticLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="glass-card p-8 text-center">
-            <div className="loading-pulse w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full mx-auto mb-4" />
-            <p className="neon-text">Initializing AI Dashboard...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="glass-card p-8 text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-4 animate-pulse" />
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
-      </FuturisticLayout>
+      </div>
     );
   }
 
@@ -95,8 +92,8 @@ export default function HomePage() {
   ];
 
   return (
-    <FuturisticLayout>
-      <CyberNavbar />
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
       
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero Section */}
@@ -106,18 +103,16 @@ export default function HomePage() {
           className="text-center mb-12"
         >
           <motion.h1 
-            className="text-6xl md:text-8xl font-bold mb-6 cyber-heading"
+            className="text-6xl md:text-7xl font-bold mb-6 cyber-heading text-gray-900"
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
           >
-            <span className="gradient-text">
-              Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]}
-            </span>
+            Welcome back, {profile?.name || user?.user_metadata?.full_name || user.email.split('@')[0]}
           </motion.h1>
           
           <motion.p 
-            className="text-xl md:text-2xl text-gray-300 mb-8 elegant-text"
+            className="text-xl md:text-2xl text-gray-600 mb-8 elegant-text"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
@@ -133,11 +128,11 @@ export default function HomePage() {
           >
             {achievements.map((achievement, index) => (
               <div key={index} className="glass-card p-4 text-center hover-lift">
-                <achievement.icon className={`w-6 h-6 text-${achievement.color}-400 mx-auto mb-2`} />
-                <div className={`text-2xl font-bold text-${achievement.color}-400`}>
+                <achievement.icon className={`w-6 h-6 text-${achievement.color}-600 mx-auto mb-2`} />
+                <div className={`text-2xl font-bold text-${achievement.color}-600`}>
                   {achievement.value}
                 </div>
-                <div className="text-xs text-gray-400">{achievement.label}</div>
+                <div className="text-xs text-gray-500">{achievement.label}</div>
               </div>
             ))}
           </motion.div>
@@ -161,28 +156,28 @@ export default function HomePage() {
           transition={{ delay: 0.6 }}
           className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12"
         >
-          <div className="hologram-card p-6 text-center hover-lift">
-            <Target className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold neon-text">{stats.applicationsToday}</div>
-            <div className="text-gray-400 text-sm">Applications Today</div>
+          <div className="glass-card p-6 text-center hover-lift">
+            <Target className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-blue-600">{stats.applicationsToday}</div>
+            <div className="text-gray-500 text-sm">Applications Today</div>
           </div>
           
-          <div className="hologram-card p-6 text-center hover-lift">
-            <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-green-400">{stats.matchScore}%</div>
-            <div className="text-gray-400 text-sm">AI Match Score</div>
+          <div className="glass-card p-6 text-center hover-lift">
+            <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-green-600">{stats.matchScore}%</div>
+            <div className="text-gray-500 text-sm">AI Match Score</div>
           </div>
           
-          <div className="hologram-card p-6 text-center hover-lift">
-            <Globe className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-purple-400">{stats.jobsScraped}</div>
-            <div className="text-gray-400 text-sm">Jobs Discovered</div>
+          <div className="glass-card p-6 text-center hover-lift">
+            <Globe className="w-8 h-8 text-purple-600 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-purple-600">{stats.jobsScraped}</div>
+            <div className="text-gray-500 text-sm">Jobs Discovered</div>
           </div>
           
-          <div className="hologram-card p-6 text-center hover-lift">
-            <Activity className="w-8 h-8 text-orange-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-orange-400">{stats.profileViews}</div>
-            <div className="text-gray-400 text-sm">Profile Views</div>
+          <div className="glass-card p-6 text-center hover-lift">
+            <Activity className="w-8 h-8 text-orange-600 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-orange-600">{stats.profileViews}</div>
+            <div className="text-gray-500 text-sm">Profile Views</div>
           </div>
         </motion.div>
 
@@ -193,7 +188,7 @@ export default function HomePage() {
           transition={{ delay: 0.8 }}
           className="mb-12"
         >
-          <h2 className="text-3xl font-bold mb-8 text-center gradient-text cyber-heading">
+          <h2 className="text-3xl font-bold mb-8 text-center text-gray-900 cyber-heading">
             AI-Powered Tools
           </h2>
           
@@ -201,7 +196,7 @@ export default function HomePage() {
             {quickActions.map((action, index) => (
               <Link key={index} href={action.href}>
                 <motion.div
-                  className="gradient-border p-8 hover-lift hover-glow cursor-pointer group"
+                  className="bg-white border border-gray-200 rounded-lg p-8 hover-lift cursor-pointer group"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.9 + index * 0.1 }}
@@ -212,20 +207,20 @@ export default function HomePage() {
                       <action.icon className="w-8 h-8 text-white" />
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-gray-400">Performance</div>
-                      <div className="text-lg font-bold text-cyan-400">{action.stats}</div>
+                      <div className="text-sm text-gray-500">Performance</div>
+                      <div className="text-lg font-bold text-blue-600">{action.stats}</div>
                     </div>
                   </div>
                   
-                  <h3 className="text-2xl font-bold mb-3 group-hover:text-cyan-400 transition-colors">
+                  <h3 className="text-2xl font-bold mb-3 group-hover:text-blue-600 transition-colors text-gray-900">
                     {action.title}
                   </h3>
                   
-                  <p className="text-gray-400 mb-4 elegant-text">
+                  <p className="text-gray-600 mb-4 elegant-text">
                     {action.description}
                   </p>
                   
-                  <div className="flex items-center text-cyan-400 group-hover:translate-x-2 transition-transform">
+                  <div className="flex items-center text-blue-600 group-hover:translate-x-2 transition-transform">
                     <span className="text-sm font-medium">Launch Tool</span>
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </div>
@@ -242,7 +237,7 @@ export default function HomePage() {
           transition={{ delay: 1.2 }}
           className="glass-card p-8"
         >
-          <h3 className="text-2xl font-bold mb-6 gradient-text">Recent Activity</h3>
+          <h3 className="text-2xl font-bold mb-6 text-gray-900">Recent Activity</h3>
           
           <div className="space-y-4">
             {[
@@ -253,14 +248,14 @@ export default function HomePage() {
             ].map((activity, index) => (
               <motion.div
                 key={index}
-                className="flex items-center justify-between p-4 rounded-lg hover:bg-white/5 transition-colors"
+                className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.3 + index * 0.1 }}
               >
                 <div className="flex items-center space-x-4">
                   <div className={`w-3 h-3 rounded-full status-${activity.status}`} />
-                  <span className="text-gray-300">{activity.action}</span>
+                  <span className="text-gray-700">{activity.action}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-500 text-sm">
                   <Clock className="w-4 h-4" />
@@ -290,8 +285,25 @@ export default function HomePage() {
         <MessageCircle className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
       </motion.button>
 
-      {/* AI Assistant Chat */}
-      <AIAssistantChat isOpen={showChat} onClose={() => setShowChat(false)} />
-    </FuturisticLayout>
+      {/* AI Assistant Chat - Import and use the component when needed */}
+      {showChat && (
+        <div className="fixed bottom-24 right-8 w-96 h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold">JobMate AI Assistant</h3>
+              <button onClick={() => setShowChat(false)} className="text-white hover:text-gray-200">
+                ×
+              </button>
+            </div>
+          </div>
+          <div className="p-4 h-full flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <Brain className="w-12 h-12 mx-auto mb-4 text-purple-500" />
+              <p>AI Assistant coming soon!</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

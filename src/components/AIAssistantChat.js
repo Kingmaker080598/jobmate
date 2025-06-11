@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
@@ -27,7 +27,7 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
     { icon: Lightbulb, label: 'Career advice', action: 'career_advice', gradient: 'from-orange-500 to-red-500' }
   ];
 
-  const initializeChat = () => {
+  const initializeChat = useCallback(() => {
     const welcomeMessage = {
       id: Date.now(),
       type: 'bot',
@@ -35,7 +35,7 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
-  };
+  }, [profile?.name, user?.email]);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -130,12 +130,12 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
         >
           {message.type === 'user' ? <User className="w-5 h-5 text-white" /> : <Brain className="w-5 h-5 text-white" />}
         </motion.div>
-        <div className={`glass-card p-4 ${
+        <div className={`bg-white/90 backdrop-blur-sm border rounded-lg p-4 shadow-sm ${
           message.type === 'user'
-            ? 'border-blue-400/30 bg-blue-500/10'
-            : 'border-purple-400/30 bg-purple-500/10'
+            ? 'border-blue-200 bg-blue-50'
+            : 'border-purple-200 bg-purple-50'
         }`}>
-          <p className="text-gray-200 leading-relaxed">{message.content}</p>
+          <p className="text-gray-800 leading-relaxed">{message.content}</p>
           <p className="text-xs text-gray-500 mt-2 font-mono">
             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
@@ -151,10 +151,10 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 20 }}
-      className="fixed bottom-4 right-4 w-96 h-[700px] glass-card border border-cyan-400/30 flex flex-col z-50 hover-lift"
+      className="fixed bottom-4 right-4 w-96 h-[700px] bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg flex flex-col z-50 shadow-xl"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-t-2xl flex justify-between items-center">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-t-lg flex justify-between items-center">
         <div className="flex items-center gap-3">
           <motion.div
             animate={{ rotate: 360 }}
@@ -163,7 +163,7 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
             <Sparkles className="w-6 h-6 text-white" />
           </motion.div>
           <div>
-            <h3 className="font-bold text-white cyber-heading">JobMate AI</h3>
+            <h3 className="font-bold text-white">JobMate AI</h3>
             <p className="text-xs text-white/80 font-mono">Your Career Copilot</p>
           </div>
         </div>
@@ -178,7 +178,7 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         <AnimatePresence>
           {messages.map((message) => (
             <MessageBubble key={message.id} message={message} />
@@ -195,11 +195,11 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                 <Brain className="w-5 h-5 text-white" />
               </div>
-              <div className="glass-card p-4 border-purple-400/30 bg-purple-500/10">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                 </div>
               </div>
             </div>
@@ -210,21 +210,21 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
 
       {/* Quick Actions */}
       {messages.length <= 1 && (
-        <div className="p-4 border-t border-white/10">
-          <p className="text-sm text-gray-400 mb-4 font-semibold">Quick Actions:</p>
+        <div className="p-4 border-t border-gray-200 bg-white">
+          <p className="text-sm text-gray-600 mb-4 font-semibold">Quick Actions:</p>
           <div className="grid grid-cols-2 gap-2">
             {quickActions.map((action) => (
               <motion.button
                 key={action.action}
                 onClick={() => handleQuickAction(action.action)}
-                className="glass-card p-3 text-xs hover:border-cyan-400/50 transition-colors group"
+                className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs hover:border-blue-300 hover:bg-blue-50 transition-colors group"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${action.gradient} mb-2 mx-auto flex items-center justify-center group-hover:scale-110 transition-transform`}>
                   <action.icon className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-gray-300 group-hover:text-white transition-colors">{action.label}</span>
+                <span className="text-gray-700 group-hover:text-blue-700 transition-colors">{action.label}</span>
               </motion.button>
             ))}
           </div>
@@ -232,17 +232,17 @@ const AIAssistantChat = ({ isOpen, onClose }) => {
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
         <div className="flex gap-3">
           <input
-            className="cyber-input flex-1 text-sm"
+            className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-2 text-gray-800 placeholder-gray-500 flex-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Ask me anything about your career..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
           />
           <motion.button
-            className="cyber-button px-4 py-2"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-colors"
             onClick={() => handleSendMessage()}
             disabled={!inputMessage.trim() || isTyping}
             whileHover={{ scale: 1.05 }}

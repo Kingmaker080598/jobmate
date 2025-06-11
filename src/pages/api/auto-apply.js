@@ -198,6 +198,7 @@ async function fillLinkedInForm(page, profile) {
         await page.type(selector, value);
       } catch (error) {
         // Field might not exist, continue
+        console.log(`Field ${selector} not found, continuing...`);
       }
     }
   }
@@ -219,6 +220,7 @@ async function fillIndeedForm(page, profile) {
         await page.type(selector, value);
       } catch (error) {
         // Field might not exist, continue
+        console.log(`Field ${selector} not found, continuing...`);
       }
     }
   }
@@ -240,6 +242,7 @@ async function fillGlassdoorForm(page, profile) {
         await page.type(selector, value);
       } catch (error) {
         // Field might not exist, continue
+        console.log(`Field ${selector} not found, continuing...`);
       }
     }
   }
@@ -264,6 +267,7 @@ async function fillGenericForm(page, profile) {
         }
       } catch (error) {
         // Continue if field doesn't exist
+        console.log(`Field ${selector} not found, continuing...`);
       }
     }
   }

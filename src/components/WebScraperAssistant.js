@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Globe, 
@@ -37,7 +37,7 @@ const WebScraperAssistant = () => {
     { name: 'ZipRecruiter', pattern: 'ziprecruiter.com', icon: Search, color: 'red', gradient: 'from-red-500 to-pink-500' }
   ];
 
-  const fetchScrapingHistory = async () => {
+  const fetchScrapingHistory = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -54,7 +54,7 @@ const WebScraperAssistant = () => {
     } catch (error) {
       console.error('Error fetching scraping history:', error);
     }
-  };
+  }, [user]);
 
   const simulateCurrentTab = () => {
     const mockUrls = [
@@ -68,7 +68,7 @@ const WebScraperAssistant = () => {
   useEffect(() => {
     fetchScrapingHistory();
     simulateCurrentTab();
-  }, [user, fetchScrapingHistory]);
+  }, [fetchScrapingHistory]);
 
   const scrapeCurrentPage = async () => {
     if (!currentUrl) {
@@ -205,10 +205,10 @@ Benefits:
     <motion.div
       whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
-      className={`gradient-border p-6 cursor-pointer transition-all ${
+      className={`bg-white rounded-lg shadow-md border-2 p-6 cursor-pointer transition-all ${
         currentUrl.includes(site.pattern) 
-          ? 'border-cyan-400 bg-cyan-400/10' 
-          : 'hover:border-purple-400/50'
+          ? 'border-blue-500 bg-blue-50' 
+          : 'border-gray-200 hover:border-gray-300'
       }`}
     >
       <div className="flex items-center gap-4">
@@ -216,23 +216,23 @@ Benefits:
           <site.icon className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h4 className="font-bold text-lg">{site.name}</h4>
-          <p className="text-sm text-gray-400">
+          <h4 className="font-bold text-lg text-gray-900">{site.name}</h4>
+          <p className="text-sm text-gray-500">
             {currentUrl.includes(site.pattern) ? 'Currently Active' : 'Supported Platform'}
           </p>
         </div>
       </div>
       {currentUrl.includes(site.pattern) && (
         <div className="mt-4 flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-xs text-green-400 font-mono">DETECTED</span>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span className="text-xs text-green-600 font-semibold">DETECTED</span>
         </div>
       )}
     </motion.div>
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -240,23 +240,13 @@ Benefits:
         className="text-center mb-12"
       >
         <div className="flex items-center justify-center gap-4 mb-6">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          >
-            <Globe className="w-12 h-12 text-green-400" />
-          </motion.div>
-          <h1 className="text-5xl md:text-7xl font-bold gradient-text cyber-heading">
-            Web Scraper AI
+          <Globe className="w-12 h-12 text-green-500" />
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
+            Web Scraper
           </h1>
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Brain className="w-12 h-12 text-purple-400" />
-          </motion.div>
+          <Brain className="w-12 h-12 text-purple-500" />
         </div>
-        <p className="text-xl text-gray-300 elegant-text">
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Extract job details from any posting with AI-powered precision
         </p>
       </motion.div>
@@ -265,18 +255,18 @@ Benefits:
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass-card p-8 mb-8 hover-lift"
+        className="bg-white rounded-lg shadow-lg p-8 mb-8"
       >
-        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
-          <Eye className="w-8 h-8 text-cyan-400" />
-          <span className="gradient-text">Page Detection & Extraction</span>
+        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4 text-gray-900">
+          <Eye className="w-8 h-8 text-blue-600" />
+          Page Detection & Extraction
         </h2>
 
         <div className="mb-8">
-          <div className="cyber-input-container mb-6">
+          <div className="mb-6">
             <input
               type="url"
-              className="cyber-input w-full"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter job posting URL or let AI detect current tab..."
               value={currentUrl}
               onChange={(e) => setCurrentUrl(e.target.value)}
@@ -285,7 +275,7 @@ Benefits:
           
           <div className="flex gap-4">
             <motion.button
-              className="cyber-button flex-1 text-lg py-4"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
               onClick={scrapeCurrentPage}
               disabled={loading || !currentUrl}
               whileHover={{ scale: 1.02 }}
@@ -305,7 +295,7 @@ Benefits:
             </motion.button>
             
             <motion.button
-              className="glass-card px-8 py-4 border border-purple-400/50 hover:border-purple-400 transition-colors"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-4 rounded-lg border border-gray-300 transition-colors"
               onClick={simulateCurrentTab}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -319,7 +309,7 @@ Benefits:
         </div>
 
         <div>
-          <h3 className="text-xl font-semibold mb-6 text-cyan-400">Supported Platforms</h3>
+          <h3 className="text-xl font-semibold mb-6 text-gray-900">Supported Platforms</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {supportedSites.map((site) => (
               <SiteCard key={site.name} site={site} />
@@ -333,16 +323,16 @@ Benefits:
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-8 mb-8 hover-lift"
+          className="bg-white rounded-lg shadow-lg p-8 mb-8"
         >
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold flex items-center gap-4">
-              <CheckCircle className="w-8 h-8 text-green-400" />
-              <span className="gradient-text">Extracted Job Intelligence</span>
+            <h2 className="text-3xl font-bold flex items-center gap-4 text-gray-900">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+              Extracted Job Intelligence
             </h2>
             <div className="flex gap-4">
               <motion.button
-                className="cyber-button px-6 py-3"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 onClick={sendToAITailoring}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -353,7 +343,7 @@ Benefits:
                 </div>
               </motion.button>
               <motion.button
-                className="glass-card px-6 py-3 border border-cyan-400/50 hover:border-cyan-400 transition-colors"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg border border-gray-300 transition-colors"
                 onClick={saveJobToBoard}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -368,39 +358,39 @@ Benefits:
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <div className="hologram-card p-8 mb-8">
-                <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
-                  <Building className="w-6 h-6 text-cyan-400" />
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 mb-8">
+                <h3 className="text-xl font-semibold mb-6 flex items-center gap-3 text-gray-900">
+                  <Building className="w-6 h-6 text-blue-600" />
                   Job Overview
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-2xl font-bold gradient-text">{scrapedData.title}</h4>
-                    <p className="text-lg text-gray-300">{scrapedData.company}</p>
+                    <h4 className="text-2xl font-bold text-gray-900">{scrapedData.title}</h4>
+                    <p className="text-lg text-gray-700">{scrapedData.company}</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-blue-400" />
-                      <span>{scrapedData.location}</span>
+                      <MapPin className="w-4 h-4 text-blue-500" />
+                      <span className="text-gray-700">{scrapedData.location}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-400" />
-                      <span>{scrapedData.salary}</span>
+                      <DollarSign className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-700">{scrapedData.salary}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-purple-400" />
-                      <span>{scrapedData.jobType}</span>
+                      <Clock className="w-4 h-4 text-purple-500" />
+                      <span className="text-gray-700">{scrapedData.jobType}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-orange-400" />
-                      <span>{scrapedData.experience}</span>
+                      <TrendingUp className="w-4 h-4 text-orange-500" />
+                      <span className="text-gray-700">{scrapedData.experience}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="hologram-card p-8">
-                <h3 className="text-xl font-semibold mb-6 text-cyan-400">AI-Extracted Skills</h3>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
+                <h3 className="text-xl font-semibold mb-6 text-gray-900">AI-Extracted Skills</h3>
                 <div className="flex flex-wrap gap-3">
                   {scrapedData.skills.map((skill, index) => (
                     <motion.div
@@ -411,25 +401,26 @@ Benefits:
                     >
                       <Chip
                         label={skill}
-                        className="neon-border bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                        variant="outlined"
+                        color="primary"
                       />
                     </motion.div>
                   ))}
                 </div>
                 <div className="mt-6">
-                  <h4 className="font-semibold mb-3 text-cyan-400">Experience Level</h4>
-                  <div className="glass-card p-4 border border-cyan-400/30">
-                    <span className="text-cyan-300 font-mono">{scrapedData.experience}</span>
+                  <h4 className="font-semibold mb-3 text-gray-900">Experience Level</h4>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <span className="text-blue-600 font-semibold">{scrapedData.experience}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div>
-              <div className="hologram-card p-8">
-                <h3 className="text-xl font-semibold mb-6 text-cyan-400">Job Description</h3>
-                <div className="glass-card p-6 max-h-96 overflow-y-auto border border-gray-400/30">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-300">{scrapedData.description}</pre>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
+                <h3 className="text-xl font-semibold mb-6 text-gray-900">Job Description</h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700">{scrapedData.description}</pre>
                 </div>
               </div>
             </div>
@@ -441,18 +432,18 @@ Benefits:
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-8"
+        className="bg-white rounded-lg shadow-lg p-8"
       >
-        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4">
-          <Clock className="w-8 h-8 text-purple-400" />
-          <span className="gradient-text">Extraction History</span>
+        <h2 className="text-3xl font-bold mb-8 flex items-center gap-4 text-gray-900">
+          <Clock className="w-8 h-8 text-purple-600" />
+          Extraction History
         </h2>
 
         {scrapingHistory.length === 0 ? (
           <div className="text-center py-12">
-            <Globe className="w-16 h-16 text-gray-500 mx-auto mb-4 opacity-50" />
+            <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">No extraction history yet</p>
-            <p className="text-gray-600 text-sm">Start scraping jobs to see your history here</p>
+            <p className="text-gray-400 text-sm">Start scraping jobs to see your history here</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -462,15 +453,15 @@ Benefits:
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="gradient-border p-6 hover-lift cursor-pointer"
+                className="bg-gray-50 border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setScrapedData(entry.scraped_data)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
+                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
                     <div>
-                      <h4 className="font-bold text-lg">{entry.job_title}</h4>
-                      <p className="text-gray-400">
+                      <h4 className="font-bold text-lg text-gray-900">{entry.job_title}</h4>
+                      <p className="text-gray-600">
                         {entry.company} • {new Date(entry.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -478,10 +469,11 @@ Benefits:
                   <div className="flex items-center gap-3">
                     <Chip 
                       label={entry.success ? 'Success' : 'Failed'} 
-                      className={entry.success ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}
+                      color={entry.success ? 'success' : 'error'}
+                      variant="outlined"
                     />
                     <motion.button
-                      className="glass-card px-4 py-2 border border-cyan-400/50 hover:border-cyan-400 transition-colors"
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border border-gray-300 transition-colors"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
