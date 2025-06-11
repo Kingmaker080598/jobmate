@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,7 +16,7 @@ import {
   Calendar,
   Star
 } from 'lucide-react';
-import { Typography, Button, Chip, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Typography, Button, Chip, Dialog, DialogTitle, DialogContent, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import toast from 'react-hot-toast';
 
 const JobBoard = () => {
@@ -33,7 +33,7 @@ const JobBoard = () => {
   const [savedJobs, setSavedJobs] = useState(new Set());
   const [appliedJobs, setAppliedJobs] = useState(new Set());
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('jobs')
@@ -48,9 +48,9 @@ const JobBoard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchUserJobData = async () => {
+  const fetchUserJobData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -68,9 +68,9 @@ const JobBoard = () => {
     } catch (error) {
       console.error('Error fetching user job data:', error);
     }
-  };
+  }, [user]);
 
-  const filterJobs = () => {
+  const filterJobs = useCallback(() => {
     let filtered = jobs;
 
     if (searchTerm) {
@@ -113,16 +113,16 @@ const JobBoard = () => {
     }
 
     setFilteredJobs(filtered);
-  };
+  }, [jobs, searchTerm, locationFilter, salaryFilter, experienceFilter, jobTypeFilter]);
 
   useEffect(() => {
     fetchJobs();
     fetchUserJobData();
-  }, [user]);
+  }, [fetchJobs, fetchUserJobData]);
 
   useEffect(() => {
     filterJobs();
-  }, [jobs, searchTerm, locationFilter, salaryFilter, experienceFilter, jobTypeFilter]);
+  }, [filterJobs]);
 
   const handleSaveJob = async (jobId) => {
     if (!user) {

@@ -54,7 +54,7 @@ const SmartAutofillEngine = () => {
         setProfile(data);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.log('Profile fetch error:', error);
     }
   }, [user]);
 
@@ -73,7 +73,7 @@ const SmartAutofillEngine = () => {
         setFillHistory(data);
       }
     } catch (error) {
-      console.error('Error fetching fill history:', error);
+      console.log('Fill history fetch error:', error);
     }
   }, [user]);
 

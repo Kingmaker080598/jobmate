@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/contexts/UserContext';
 import { motion } from 'framer-motion';
@@ -28,7 +28,7 @@ const AutoApplyDashboard = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAutoApplyData = async () => {
+  const fetchAutoApplyData = useCallback(async () => {
     try {
       const [applicationsRes, campaignsRes, settingsRes] = await Promise.all([
         supabase
@@ -64,13 +64,13 @@ const AutoApplyDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     if (user) {
       fetchAutoApplyData();
     }
-  }, [user]);
+  }, [user, fetchAutoApplyData]);
 
   const calculateStats = (apps) => {
     const total = apps.length;

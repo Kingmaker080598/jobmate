@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,7 +38,7 @@ const ApplicationTracker = () => {
     applied_date: new Date().toISOString().split('T')[0]
   });
 
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('job_applications')
@@ -70,13 +70,13 @@ const ApplicationTracker = () => {
       console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     if (user) {
       fetchApplications();
     }
-  }, [user]);
+  }, [user, fetchApplications]);
 
   const updateApplicationStatus = async (applicationId, newStatus) => {
     try {

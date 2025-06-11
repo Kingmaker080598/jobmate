@@ -48,7 +48,7 @@ Return a JSON response with:
     try {
       const analysisData = JSON.parse(response);
       res.status(200).json(analysisData);
-    } catch (parseError) {
+    } catch (error) {
       console.log('JSON parsing failed, using fallback analysis');
       // Fallback if JSON parsing fails
       const keywords = extractKeywordsFromText(jobDescription);

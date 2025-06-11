@@ -6,7 +6,7 @@ import {
   Download, 
   Save, 
   RefreshCw, 
-  CheckCircle, 
+  CheckCircle,
   AlertCircle,
   BarChart3,
   Eye,

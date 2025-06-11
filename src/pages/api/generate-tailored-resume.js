@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { resumeContent, jobDescription, toneStyle = 'professional', keywords = [] } = req.body
+  const { resumeContent, jobDescription, keywords = [] } = req.body
 
   if (!resumeContent || !jobDescription) {
     return res.status(400).json({ error: 'Missing resume or job description' })
@@ -27,8 +27,6 @@ export default async function handler(req, res) {
     };
 
     const prompt = `You are an expert resume optimization specialist. Your task is to enhance the following resume by strategically incorporating relevant keywords and phrases from the job description.
-
-TONE STYLE: ${toneStyle} - ${toneInstructions[toneStyle]}
 
 OPTIMIZATION RULES:
 ✅ Strategically inject keywords where they naturally fit
@@ -56,8 +54,7 @@ INSTRUCTIONS:
 1. Analyze the job requirements and identify key skills/technologies
 2. Enhance the resume by naturally incorporating relevant keywords
 3. Optimize bullet points for impact and ATS scanning
-4. Maintain the ${toneStyle} tone throughout
-5. Return the enhanced resume in the same format as the original
+4. Return the enhanced resume in the same format as the original
 
 Enhanced Resume:`
 
@@ -84,8 +81,7 @@ Enhanced Resume:`
       optimizations: [
         'Enhanced keyword density',
         'Improved ATS compatibility',
-        'Optimized for target role',
-        `Applied ${toneStyle} tone`
+        'Optimized for target role'
       ]
     })
   } catch (error) {
@@ -99,7 +95,7 @@ Enhanced Resume:`
     // Enhanced fallback for API errors
     if (error.status === 429 || error.status === 404) {
       // Provide a basic tailored resume using keyword injection
-      const basicTailoredResume = createBasicTailoredResume(resumeContent, keywords, toneStyle);
+      const basicTailoredResume = createBasicTailoredResume(resumeContent, keywords);
       
       res.status(200).json({
         tailoredResume: basicTailoredResume,
@@ -108,7 +104,6 @@ Enhanced Resume:`
         optimizations: [
           'Basic keyword optimization applied',
           'Fallback tailoring method used',
-          `Applied ${toneStyle} tone`,
           'Manual review recommended'
         ],
         fallbackUsed: true
@@ -123,7 +118,7 @@ Enhanced Resume:`
   }
 }
 
-function createBasicTailoredResume(resumeContent, keywords, toneStyle) {
+function createBasicTailoredResume(resumeContent, keywords) {
   // Basic keyword injection fallback
   let tailoredResume = resumeContent;
   
