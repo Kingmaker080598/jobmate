@@ -24,7 +24,7 @@ import {
 import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 const AIResumeTailoringCopilot = () => {
   const { user } = useUser();
@@ -84,7 +84,10 @@ const AIResumeTailoringCopilot = () => {
               setOriginalFileName(resume.file_name || 'Previous Resume');
               setOriginalFileType(resume.file_type || 'text/plain');
             } else {
-              toast.info('Previous resume needs to be re-uploaded in a supported format.');
+              toast('Previous resume needs to be re-uploaded in a supported format.', {
+                icon: 'ℹ️',
+                duration: 4000,
+              });
             }
           } catch (err) {
             console.error('Error fetching resume content:', err);
@@ -365,6 +368,8 @@ const AIResumeTailoringCopilot = () => {
           throw new Error('DOCX conversion failed');
         }
       }
+      
+      toast.success(`✅ Downloaded as ${format.toUpperCase()}!`);
     } catch (error) {
       console.error('Download error:', error);
       toast.error(`Failed to download ${format.toUpperCase()} file`);
@@ -390,7 +395,10 @@ const AIResumeTailoringCopilot = () => {
     setOriginalFileName('');
     setOriginalFileType('');
     setUploadedFile(null);
-    toast.info('Resume removed. Upload a new file to continue.');
+    toast('Resume removed. Upload a new file to continue.', {
+      icon: 'ℹ️',
+      duration: 3000,
+    });
   };
 
   const StepIndicator = ({ currentStep }) => (

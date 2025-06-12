@@ -32,7 +32,6 @@
     "next": "15.2.5",
     "node-cron": "^3.0.3",
     "openai": "^4.93.0",
-    "pdf-extract": "^1.0.11",
     "puppeteer": "^23.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

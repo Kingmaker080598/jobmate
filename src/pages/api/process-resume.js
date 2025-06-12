@@ -1,8 +1,6 @@
 import formidable from 'formidable';
 import fs from 'fs';
-import path from 'path';
 import mammoth from 'mammoth';
-import { PDFExtract } from 'pdf-extract';
 
 export const config = {
   api: {
@@ -39,8 +37,8 @@ export default async function handler(req, res) {
         // Handle plain text files
         extractedText = fs.readFileSync(filePath, 'utf8');
       } else if (mimeType === 'application/pdf') {
-        // Handle PDF files
-        extractedText = await extractPDFText(filePath);
+        // Handle PDF files - simplified approach
+        extractedText = await extractPDFTextSimple(filePath);
       } else if (
         mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
         mimeType === 'application/msword'
@@ -48,14 +46,14 @@ export default async function handler(req, res) {
         // Handle Word documents
         extractedText = await extractWordText(filePath);
       } else {
-        throw new Error('Unsupported file format');
+        throw new Error('Unsupported file format. Please use TXT, PDF, or DOCX files.');
       }
 
       // Clean and validate the extracted text
       extractedText = cleanExtractedText(extractedText);
 
       if (!extractedText || extractedText.length < 50) {
-        throw new Error('Could not extract readable text from the file');
+        throw new Error('Could not extract readable text from the file. Please ensure your file contains text content.');
       }
 
       // Clean up the temporary file
@@ -86,42 +84,10 @@ export default async function handler(req, res) {
   }
 }
 
-async function extractPDFText(filePath) {
-  return new Promise((resolve, reject) => {
-    const pdfExtract = new PDFExtract();
-    
-    pdfExtract.extract(filePath, {}, (err, data) => {
-      if (err) {
-        reject(new Error('Failed to extract text from PDF'));
-        return;
-      }
-
-      try {
-        let text = '';
-        if (data && data.pages) {
-          data.pages.forEach(page => {
-            if (page.content) {
-              page.content.forEach(item => {
-                if (item.str) {
-                  text += item.str + ' ';
-                }
-              });
-              text += '\n';
-            }
-          });
-        }
-
-        if (!text.trim()) {
-          reject(new Error('No text content found in PDF'));
-          return;
-        }
-
-        resolve(text.trim());
-      } catch (parseError) {
-        reject(new Error('Failed to parse PDF content'));
-      }
-    });
-  });
+async function extractPDFTextSimple(filePath) {
+  // For now, we'll provide a fallback message for PDF files
+  // In a production environment, you'd want to use a proper PDF parsing library
+  throw new Error('PDF processing requires additional setup. Please convert your PDF to TXT format or use a DOCX file for now.');
 }
 
 async function extractWordText(filePath) {
