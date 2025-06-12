@@ -4,6 +4,7 @@ import { Rocket, FileText, Brain, Lightbulb, Clock, ClipboardCheck, Sparkles, Za
 import { supabase } from '@/lib/supabaseClient';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -28,9 +29,13 @@ export default function LandingPage() {
               className="flex items-center space-x-3 cursor-pointer group"
               whileHover={{ scale: 1.05 }}
             >
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">JM</span>
-              </div>
+              <Image
+                src="/favicon-32x32.png"
+                alt="JobMate Logo"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
               <span className="text-2xl font-bold text-gray-900">
                 JobMate
               </span>
@@ -268,9 +273,13 @@ export default function LandingPage() {
       <footer className="border-t border-gray-200 bg-white text-center py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">JM</span>
-            </div>
+            <Image
+              src="/favicon-32x32.png"
+              alt="JobMate Logo"
+              width={24}
+              height={24}
+              className="rounded-lg"
+            />
             <span className="text-xl font-bold text-gray-900">JobMate</span>
           </div>
           <p className="text-gray-600 elegant-text mb-6">

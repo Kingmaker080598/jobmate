@@ -14,7 +14,9 @@ import {
   Target,
   Sparkles,
   Brain,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 import { Chip } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -56,106 +58,84 @@ const WebScraperAssistant = () => {
     }
   }, [user]);
 
-  const simulateCurrentTab = () => {
-    const mockUrls = [
-      'https://www.linkedin.com/jobs/view/3234567890',
-      'https://www.indeed.com/viewjob?jk=abc123def456',
-      'https://www.glassdoor.com/job-listing/software-engineer-google-JV_IC1147401_KO0,17_KE18,24.htm'
-    ];
-    setCurrentUrl(mockUrls[Math.floor(Math.random() * mockUrls.length)]);
-  };
-
   useEffect(() => {
     fetchScrapingHistory();
-    simulateCurrentTab();
   }, [fetchScrapingHistory]);
 
-  const scrapeCurrentPage = async () => {
-    if (!currentUrl) {
-      toast.error('No active job page detected');
+  const scrapeJobFromUrl = async (url) => {
+    if (!url || !url.trim()) {
+      toast.error('Please enter a valid job URL');
+      return;
+    }
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (error) {
+      toast.error('Please enter a valid URL (e.g., https://linkedin.com/jobs/view/123456)');
       return;
     }
 
     setLoading(true);
-    toast.loading('Extracting job details with AI...', { id: 'scrape' });
+    toast.loading('Extracting job details from URL...', { id: 'scrape' });
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Scraping job from URL:', url);
 
-      const mockJobData = {
-        title: 'Senior Software Engineer',
-        company: 'TechCorp Inc.',
-        location: 'San Francisco, CA (Remote)',
-        salary: '$120,000 - $180,000',
-        jobType: 'Full-time',
-        experience: 'Mid-Senior level',
-        description: `We are looking for a Senior Software Engineer to join our growing team. You will be responsible for designing, developing, and maintaining scalable web applications using modern technologies.
+      // Call our scraping API
+      const response = await fetch('/api/scrape-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
 
-Key Responsibilities:
-• Develop and maintain web applications using React, Node.js, and TypeScript
-• Collaborate with cross-functional teams to define and implement new features
-• Write clean, maintainable, and well-tested code
-• Participate in code reviews and technical discussions
-• Mentor junior developers and contribute to team growth
+      const data = await response.json();
+      console.log('Scraping API response:', data);
 
-Requirements:
-• 5+ years of experience in software development
-• Strong proficiency in JavaScript, React, and Node.js
-• Experience with cloud platforms (AWS, GCP, or Azure)
-• Knowledge of database systems (SQL and NoSQL)
-• Excellent communication and problem-solving skills
-• Bachelor's degree in Computer Science or related field
+      if (response.ok && data.success) {
+        setScrapedData(data.jobData);
 
-Benefits:
-• Competitive salary and equity package
-• Comprehensive health, dental, and vision insurance
-• Flexible work arrangements and unlimited PTO
-• Professional development budget
-• Modern office with free meals and snacks`,
-        requirements: [
-          '5+ years of software development experience',
-          'Proficiency in JavaScript, React, Node.js',
-          'Experience with cloud platforms',
-          'Strong problem-solving skills',
-          'Bachelor\'s degree preferred'
-        ],
-        skills: [
-          'JavaScript', 'React', 'Node.js', 'TypeScript', 'AWS', 'SQL', 'NoSQL', 'Git', 'Agile'
-        ],
-        benefits: [
-          'Competitive salary',
-          'Health insurance',
-          'Remote work',
-          'Unlimited PTO',
-          'Professional development'
-        ],
-        postedDate: new Date().toISOString(),
-        applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        url: currentUrl
-      };
+        // Save to scraping history
+        if (user) {
+          const { error } = await supabase
+            .from('scraping_history')
+            .insert({
+              user_id: user.id,
+              url: url,
+              job_title: data.jobData.title,
+              company: data.jobData.company,
+              scraped_data: data.jobData,
+              success: true,
+              created_at: new Date().toISOString()
+            });
 
-      setScrapedData(mockJobData);
+          if (!error) {
+            fetchScrapingHistory();
+          }
+        }
 
-      const { error } = await supabase
-        .from('scraping_history')
-        .insert({
-          user_id: user.id,
-          url: currentUrl,
-          job_title: mockJobData.title,
-          company: mockJobData.company,
-          scraped_data: mockJobData,
-          success: true,
-          created_at: new Date().toISOString()
-        });
-
-      if (!error) {
+        toast.success('✅ Job details extracted successfully!', { id: 'scrape' });
+      } else {
+        throw new Error(data.error || 'Failed to extract job details');
+      }
+    } catch (error) {
+      console.error('Scraping error:', error);
+      
+      // Save failed attempt to history
+      if (user) {
+        await supabase
+          .from('scraping_history')
+          .insert({
+            user_id: user.id,
+            url: url,
+            success: false,
+            error_message: error.message,
+            created_at: new Date().toISOString()
+          });
         fetchScrapingHistory();
       }
 
-      toast.success('✅ Job details extracted successfully!', { id: 'scrape' });
-    } catch (error) {
-      console.error('Scraping error:', error);
-      toast.error('Failed to extract job details', { id: 'scrape' });
+      toast.error(`Failed to extract job details: ${error.message}`, { id: 'scrape' });
     } finally {
       setLoading(false);
     }
@@ -185,9 +165,9 @@ Benefits:
           salary_text: scrapedData.salary,
           job_type: scrapedData.jobType,
           experience_level: scrapedData.experience,
-          skills: scrapedData.skills,
-          requirements: scrapedData.requirements,
-          benefits: scrapedData.benefits,
+          skills: scrapedData.skills || [],
+          requirements: scrapedData.requirements || [],
+          benefits: scrapedData.benefits || [],
           external_url: scrapedData.url,
           source: 'scraped',
           created_at: new Date().toISOString()
@@ -201,12 +181,19 @@ Benefits:
     }
   };
 
+  const detectPlatform = (url) => {
+    if (!url) return null;
+    return supportedSites.find(site => url.toLowerCase().includes(site.pattern));
+  };
+
+  const currentPlatform = detectPlatform(currentUrl);
+
   const SiteCard = ({ site }) => (
     <motion.div
       whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
       className={`bg-white rounded-lg shadow-md border-2 p-6 cursor-pointer transition-all ${
-        currentUrl.includes(site.pattern) 
+        currentPlatform?.name === site.name 
           ? 'border-blue-500 bg-blue-50' 
           : 'border-gray-200 hover:border-gray-300'
       }`}
@@ -218,11 +205,11 @@ Benefits:
         <div>
           <h4 className="font-bold text-lg text-gray-900">{site.name}</h4>
           <p className="text-sm text-gray-500">
-            {currentUrl.includes(site.pattern) ? 'Currently Active' : 'Supported Platform'}
+            {currentPlatform?.name === site.name ? 'Currently Detected' : 'Supported Platform'}
           </p>
         </div>
       </div>
-      {currentUrl.includes(site.pattern) && (
+      {currentPlatform?.name === site.name && (
         <div className="mt-4 flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           <span className="text-xs text-green-600 font-semibold">DETECTED</span>
@@ -242,7 +229,7 @@ Benefits:
         <div className="flex items-center justify-center gap-4 mb-6">
           <Globe className="w-12 h-12 text-green-500" />
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
-            Web Scraper
+            Smart Job Scraper
           </h1>
           <Brain className="w-12 h-12 text-purple-500" />
         </div>
@@ -251,7 +238,7 @@ Benefits:
         </p>
       </motion.div>
 
-      {/* Current Page Detection */}
+      {/* URL Input and Scraping */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -259,32 +246,41 @@ Benefits:
       >
         <h2 className="text-3xl font-bold mb-8 flex items-center gap-4 text-gray-900">
           <Eye className="w-8 h-8 text-blue-600" />
-          Page Detection & Extraction
+          Job URL Extraction
         </h2>
 
         <div className="mb-8">
           <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Job Posting URL
+            </label>
             <input
               type="url"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter job posting URL or let AI detect current tab..."
+              placeholder="Paste job URL here (e.g., https://linkedin.com/jobs/view/123456)"
               value={currentUrl}
               onChange={(e) => setCurrentUrl(e.target.value)}
             />
+            {currentPlatform && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="w-4 h-4" />
+                <span>Platform detected: {currentPlatform.name}</span>
+              </div>
+            )}
           </div>
           
           <div className="flex gap-4">
             <motion.button
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
-              onClick={scrapeCurrentPage}
-              disabled={loading || !currentUrl}
+              onClick={() => scrapeJobFromUrl(currentUrl)}
+              disabled={loading || !currentUrl.trim()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-3">
                   <RefreshCw className="w-6 h-6 animate-spin" />
-                  AI Extracting...
+                  Extracting Job Details...
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-3">
@@ -292,18 +288,6 @@ Benefits:
                   Extract Job Details
                 </div>
               )}
-            </motion.button>
-            
-            <motion.button
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-4 rounded-lg border border-gray-300 transition-colors"
-              onClick={simulateCurrentTab}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center gap-3">
-                <RefreshCw className="w-5 h-5" />
-                Detect Tab
-              </div>
             </motion.button>
           </div>
         </div>
@@ -350,7 +334,7 @@ Benefits:
               >
                 <div className="flex items-center gap-3">
                   <Target className="w-5 h-5" />
-                  Save to Board
+                  Save Job
                 </div>
               </motion.button>
             </div>
@@ -369,51 +353,68 @@ Benefits:
                     <p className="text-lg text-gray-700">{scrapedData.company}</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-blue-500" />
-                      <span className="text-gray-700">{scrapedData.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-500" />
-                      <span className="text-gray-700">{scrapedData.salary}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-purple-500" />
-                      <span className="text-gray-700">{scrapedData.jobType}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-orange-500" />
-                      <span className="text-gray-700">{scrapedData.experience}</span>
-                    </div>
+                    {scrapedData.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-blue-500" />
+                        <span className="text-gray-700">{scrapedData.location}</span>
+                      </div>
+                    )}
+                    {scrapedData.salary && (
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-green-500" />
+                        <span className="text-gray-700">{scrapedData.salary}</span>
+                      </div>
+                    )}
+                    {scrapedData.jobType && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-purple-500" />
+                        <span className="text-gray-700">{scrapedData.jobType}</span>
+                      </div>
+                    )}
+                    {scrapedData.experience && (
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-orange-500" />
+                        <span className="text-gray-700">{scrapedData.experience}</span>
+                      </div>
+                    )}
                   </div>
+                  {scrapedData.url && (
+                    <div className="mt-4">
+                      <a
+                        href={scrapedData.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View Original Posting
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
-                <h3 className="text-xl font-semibold mb-6 text-gray-900">AI-Extracted Skills</h3>
-                <div className="flex flex-wrap gap-3">
-                  {scrapedData.skills.map((skill, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Chip
-                        label={skill}
-                        variant="outlined"
-                        color="primary"
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3 text-gray-900">Experience Level</h4>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <span className="text-blue-600 font-semibold">{scrapedData.experience}</span>
+              {scrapedData.skills && scrapedData.skills.length > 0 && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
+                  <h3 className="text-xl font-semibold mb-6 text-gray-900">Extracted Skills</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {scrapedData.skills.map((skill, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Chip
+                          label={skill}
+                          variant="outlined"
+                          color="primary"
+                        />
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div>
@@ -454,16 +455,22 @@ Benefits:
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className="bg-gray-50 border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setScrapedData(entry.scraped_data)}
+                onClick={() => entry.success && entry.scraped_data && setScrapedData(entry.scraped_data)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+                    <div className={`w-4 h-4 rounded-full ${entry.success ? 'bg-green-500' : 'bg-red-500'}`} />
                     <div>
-                      <h4 className="font-bold text-lg text-gray-900">{entry.job_title}</h4>
+                      <h4 className="font-bold text-lg text-gray-900">
+                        {entry.job_title || 'Job Extraction'}
+                      </h4>
                       <p className="text-gray-600">
-                        {entry.company} • {new Date(entry.created_at).toLocaleDateString()}
+                        {entry.company && `${entry.company} • `}
+                        {new Date(entry.created_at).toLocaleDateString()}
                       </p>
+                      {!entry.success && entry.error_message && (
+                        <p className="text-red-600 text-sm mt-1">{entry.error_message}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -472,13 +479,15 @@ Benefits:
                       color={entry.success ? 'success' : 'error'}
                       variant="outlined"
                     />
-                    <motion.button
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border border-gray-300 transition-colors"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </motion.button>
+                    {entry.success && (
+                      <motion.button
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border border-gray-300 transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               </motion.div>

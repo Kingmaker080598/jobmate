@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useUser } from '@/contexts/UserContext';
+import Image from 'next/image';
 import { 
   Home, 
   Sparkles, 
@@ -60,9 +61,13 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/home" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">JM</span>
-            </div>
+            <Image
+              src="/favicon-32x32.png"
+              alt="JobMate Logo"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
             <span className="text-xl font-bold text-gray-900">
               JobMate
             </span>
