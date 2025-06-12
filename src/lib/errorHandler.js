@@ -20,6 +20,7 @@ export const ERROR_CODES = {
   UNSUPPORTED_FORMAT: 'UNSUPPORTED_FORMAT',
   FILE_CORRUPTED: 'FILE_CORRUPTED',
   EXTRACTION_FAILED: 'EXTRACTION_FAILED',
+  PDF_PROCESSING_LIMITED: 'PDF_PROCESSING_LIMITED',
   
   // Database Errors
   DB_CONNECTION_ERROR: 'DB_CONNECTION_ERROR',
@@ -63,6 +64,12 @@ export const ERROR_MESSAGES = {
     action: 'Please convert your file to a supported format.',
     severity: 'error'
   },
+  [ERROR_CODES.PDF_PROCESSING_LIMITED]: {
+    title: 'PDF Processing Limitation',
+    message: 'We\'re currently experiencing limitations with PDF text extraction. For the best results, please convert your PDF to DOCX or TXT format, or copy and paste your resume content directly.',
+    action: 'Try converting to DOCX/TXT or paste content directly.',
+    severity: 'warning'
+  },
   [ERROR_CODES.EXTRACTION_FAILED]: {
     title: 'Content Extraction Issue',
     message: 'We couldn\'t extract text from your file. This might be due to formatting or encryption.',
@@ -105,6 +112,10 @@ export function handleError(error, context = {}) {
     errorCode = ERROR_CODES.FILE_TOO_LARGE;
   } else if (error.message.includes('Unsupported') || error.message.includes('format')) {
     errorCode = ERROR_CODES.UNSUPPORTED_FORMAT;
+  } else if (error.message.includes('No readable resume content available') || 
+             (error.message.includes('extract') && context.operation === 'resume_tailoring') ||
+             (error.message.includes('readable') && context.fileType === 'pdf')) {
+    errorCode = ERROR_CODES.PDF_PROCESSING_LIMITED;
   } else if (error.message.includes('extract') || error.message.includes('readable')) {
     errorCode = ERROR_CODES.EXTRACTION_FAILED;
   } else if (error.message.includes('network') || error.message.includes('fetch')) {
