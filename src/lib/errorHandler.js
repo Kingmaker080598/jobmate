@@ -90,20 +90,16 @@ export const ERROR_MESSAGES = {
 };
 
 export function handleError(error, context = {}) {
-  console.error('JobMate Error:', {
-    error: error.message,
-    code: error.code,
-    context,
-    stack: error.stack,
-    timestamp: new Date().toISOString()
-  });
-
-  // Determine error code
+  // Determine error code first
   let errorCode = ERROR_CODES.UNKNOWN_ERROR;
   
   if (error.status === 429 || error.message.includes('quota')) {
     errorCode = ERROR_CODES.OPENAI_QUOTA_EXCEEDED;
-  } else if (error.message.includes('socket hang up') || error.message.includes('Connection error')) {
+  } else if (error.message.includes('socket hang up') || 
+             error.message.includes('Connection error') ||
+             error.message.includes('FetchError') ||
+             error.code === 'ECONNRESET' ||
+             error.code === 'ENOTFOUND') {
     errorCode = ERROR_CODES.OPENAI_CONNECTION_ERROR;
   } else if (error.message.includes('File size')) {
     errorCode = ERROR_CODES.FILE_TOO_LARGE;
@@ -115,6 +111,27 @@ export function handleError(error, context = {}) {
     errorCode = ERROR_CODES.NETWORK_ERROR;
   } else if (error.status === 401 || error.message.includes('unauthorized')) {
     errorCode = ERROR_CODES.UNAUTHORIZED;
+  }
+
+  // Only log detailed errors for non-connection issues or if it's the final attempt
+  const isConnectionError = errorCode === ERROR_CODES.OPENAI_CONNECTION_ERROR;
+  const isFinalAttempt = context.isFinalAttempt || false;
+  
+  if (!isConnectionError || isFinalAttempt) {
+    console.error('JobMate Error:', {
+      error: error.message,
+      code: errorCode,
+      context,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    // For connection errors during retries, use info level logging
+    console.info('JobMate Connection Retry:', {
+      attempt: context.attempt || 'unknown',
+      operation: context.operation,
+      message: 'Retrying due to connection issue...'
+    });
   }
 
   return new JobMateError(
@@ -136,19 +153,39 @@ export function getErrorDisplay(error) {
 
 // Retry mechanism with exponential backoff
 export async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+  let lastError;
+  
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
+      lastError = error;
+      
       if (attempt === maxRetries) {
+        // Mark as final attempt for proper error logging
+        error.context = { ...error.context, isFinalAttempt: true, attempt };
+        throw error;
+      }
+      
+      // Check if this is a connection error that should be retried
+      const isRetriableError = error.message.includes('socket hang up') || 
+                              error.message.includes('Connection error') ||
+                              error.message.includes('FetchError') ||
+                              error.code === 'ECONNRESET' ||
+                              error.code === 'ENOTFOUND' ||
+                              error.status === 429;
+      
+      if (!isRetriableError) {
         throw error;
       }
       
       const delay = baseDelay * Math.pow(2, attempt - 1);
-      console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+      console.info(`Connection retry ${attempt}/${maxRetries} in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
+  
+  throw lastError;
 }
 
 // Network status monitoring
