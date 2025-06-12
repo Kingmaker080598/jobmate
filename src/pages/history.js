@@ -3,13 +3,12 @@ import { supabase } from '@/lib/supabaseClient';
 import Navbar from '@/components/Navbar';
 import RequireAuth from '@/components/RequireAuth';
 import { motion } from 'framer-motion';
-import { Clock } from 'lucide-react';
+import { Clock, Download, Eye } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 
 export default function HistoryPage() {
   const { user } = useUser();
   const [resumes, setResumes] = useState([]);
-  const [convertingId, setConvertingId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,7 +16,7 @@ export default function HistoryPage() {
 
       const { data, error } = await supabase
         .from('resume_history')
-        .select('id, job_title, resume_url, created_at')
+        .select('id, job_title, resume_url, content, file_name, file_type, created_at, tailored, match_score')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -27,171 +26,172 @@ export default function HistoryPage() {
     fetchData();
   }, [user]);
 
-  const downloadFile = async (
-    url,
-    filename,
-    targetFormat = 'original',
-    resumeId = null
-  ) => {
-    const ext = url.split('.').pop().toLowerCase();
+  const downloadText = (content, filename) => {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
-    if (targetFormat === 'original') {
-      try {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `${filename}.${ext}`; // Add the extension to filename
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(blobUrl);
-      } catch (err) {
-        console.error('Failed to download file:', err);
-        alert('❌ Failed to download file. Please try again.');
-      }
-      return;
-    }
-
-    // Handle PDF to DOCX and DOCX to PDF conversions
+  const downloadFromUrl = async (url, filename) => {
     try {
-      const cacheKey = `converted_${targetFormat}_${resumeId}`;
-      const cachedUrl = localStorage.getItem(cacheKey);
-
-      if (cachedUrl) {
-        const a = document.createElement('a');
-        a.href = cachedUrl;
-        a.download = `${filename}.${targetFormat}`;
-        a.click();
-        return;
-      }
-
-      setConvertingId(resumeId);
-
-      const res = await fetch('/api/convert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          docxUrl: url,
-          outputFileName: filename,
-          targetFormat: targetFormat, // Add this parameter
-        }),
-      });
-
-      if (!res.ok) throw new Error('Conversion failed.');
-
-      const blob = await res.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      localStorage.setItem(cacheKey, blobUrl);
-
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `${filename}.${targetFormat}`;
+      a.download = filename;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      alert(`❌ Failed to convert and download ${targetFormat.toUpperCase()}.`);
-      console.error(err);
-    } finally {
-      setConvertingId(null);
+      console.error('Failed to download file:', err);
+      alert('❌ Failed to download file. Please try again.');
     }
   };
 
-  const handleView = (url) => {
-    if (!url) {
-      alert('No resume available to view.');
-      return;
-    }
-
-    const fileExtension = url.split('.').pop().toLowerCase();
-
-    if (fileExtension === 'pdf') {
-      window.open(url, '_blank');
-    } else if (fileExtension === 'docx' || fileExtension === 'doc') {
-      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
-        url
-      )}&embedded=true`;
-      window.open(googleViewerUrl, '_blank');
+  const handleView = (resume) => {
+    if (resume.content) {
+      // Show content in a modal or new window
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write(`
+        <html>
+          <head><title>${resume.job_title}</title></head>
+          <body style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;">
+            <h1>${resume.job_title}</h1>
+            <pre style="white-space: pre-wrap;">${resume.content}</pre>
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
+    } else if (resume.resume_url) {
+      const fileExtension = resume.resume_url.split('.').pop().toLowerCase();
+      
+      if (fileExtension === 'pdf') {
+        window.open(resume.resume_url, '_blank');
+      } else if (fileExtension === 'docx' || fileExtension === 'doc') {
+        const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
+          resume.resume_url
+        )}&embedded=true`;
+        window.open(googleViewerUrl, '_blank');
+      } else {
+        alert('Unsupported file type for preview.');
+      }
     } else {
-      alert('Unsupported file type for preview.');
+      alert('No resume content available to view.');
     }
   };
 
-  if (!user) return <p className="p-6 text-white">Loading resume history...</p>;
+  const handleDownload = (resume) => {
+    if (resume.content) {
+      downloadText(resume.content, resume.job_title.replace(/\s+/g, '_'));
+    } else if (resume.resume_url) {
+      const filename = resume.file_name || `${resume.job_title.replace(/\s+/g, '_')}.${resume.resume_url.split('.').pop()}`;
+      downloadFromUrl(resume.resume_url, filename);
+    } else {
+      alert('No resume content available to download.');
+    }
+  };
+
+  if (!user) return <p className="p-6 text-gray-600">Loading resume history...</p>;
 
   return (
     <RequireAuth>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-indigo-950 text-white px-6 py-20">
+      <div className="min-h-screen bg-gray-50 px-6 py-8">
         <motion.div
-          className="text-center mb-10"
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl font-bold text-white mb-2">
-            📂 Your Resume History
-          </h1>
-          <p className="text-gray-400">
-            View and download all your previously generated or uploaded resumes.
-          </p>
-        </motion.div>
-
-        {resumes.length === 0 ? (
-          <p className="text-center text-gray-400">
-            You haven&apos;t tailored or uploaded any resumes yet.
-          </p>
-        ) : (
-          <div className="space-y-6 max-w-4xl mx-auto">
-            {resumes.map((r) => (
-              <motion.div
-                key={r.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-md shadow"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-lg font-bold text-white">
-                    {r.job_title}
-                  </h2>
-                  <span className="text-xs text-white/60 flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {new Date(r.created_at).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => handleView(r.resume_url)}
-                    className="text-sm bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white transition"
-                  >
-                    View Resume
-                  </button>
-                  <button
-                    onClick={() =>
-                      downloadFile(
-                        r.resume_url,
-                        r.job_title.replace(/\s+/g, '_'),
-                        'pdf',
-                        r.id
-                      )
-                    }
-                    className="text-sm bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-white transition"
-                  >
-                    Download PDF
-                  </button>
-                </div>
-
-                {convertingId === r.id && (
-                  <p className="text-sm text-yellow-300 mt-2">
-                    🔄 Converting DOCX to PDF...
-                  </p>
-                )}
-              </motion.div>
-            ))}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              📂 Your Resume History
+            </h1>
+            <p className="text-gray-600">
+              View and download all your previously generated or uploaded resumes.
+            </p>
           </div>
-        )}
+
+          {resumes.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Clock className="w-12 h-12 text-gray-400" />
+              </div>
+              <p className="text-gray-500 text-lg">
+                You haven&apos;t uploaded or generated any resumes yet.
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                Start by uploading your resume or using our AI tailoring tool.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {resumes.map((resume) => (
+                <motion.div
+                  key={resume.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h2 className="text-xl font-bold text-gray-900 mb-2">
+                        {resume.job_title}
+                      </h2>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{new Date(resume.created_at).toLocaleDateString()}</span>
+                        </div>
+                        {resume.tailored && (
+                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
+                            AI Tailored
+                          </span>
+                        )}
+                        {resume.match_score && (
+                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                            {resume.match_score}% Match
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <motion.button
+                      onClick={() => handleView(resume)}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Resume
+                    </motion.button>
+                    
+                    <motion.button
+                      onClick={() => handleDownload(resume)}
+                      className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-300"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </div>
     </RequireAuth>
   );
