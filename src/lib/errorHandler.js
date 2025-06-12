@@ -118,7 +118,10 @@ export function handleError(error, context = {}) {
   const isFinalAttempt = context.isFinalAttempt || false;
   
   if (!isConnectionError || isFinalAttempt) {
-    console.error('JobMate Error:', {
+    // For connection errors on final attempt, use warning level since fallback is used
+    const logLevel = (isConnectionError && isFinalAttempt) ? 'warn' : 'error';
+    
+    console[logLevel]('JobMate Error:', {
       error: error.message,
       code: errorCode,
       context,
