@@ -65,7 +65,7 @@ Return a JSON response with:
       });
     }
   } catch (error) {
-    console.error('Job analysis error:', error);
+    console.warn('Job analysis error:', error);
     
     // Enhanced fallback analysis for quota/API errors
     const keywords = extractKeywordsFromText(jobDescription);
