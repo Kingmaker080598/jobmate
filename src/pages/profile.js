@@ -1,5 +1,3 @@
-// pages/profile.js
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Navbar from '@/components/Navbar';
@@ -7,144 +5,9 @@ import RequireAuth from '@/components/RequireAuth';
 import { useUser } from '@/contexts/UserContext';
 import { motion } from 'framer-motion';
 import { TextField, Button as MuiButton, Box, Typography } from '@mui/material';
-import { Upload } from 'lucide-react';
+import { Upload, User, Mail, Calendar, Edit3, Save, Camera } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import ApplicationProfileForm from '@/components/ApplicationProfileForm';
-
-// Futuristic CSS (updated for username field fix)
-const futuristicStyles = `
-  .futuristic-bg {
-    background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #2a1a6e 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    padding: 16px;
-  }
-  .futuristic-bg::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(147, 51, 234, 0.3), transparent 70%);
-    animation: glow 12s infinite ease-in-out;
-    z-index: 0;
-  }
-  @keyframes glow {
-    0%, 100% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.1); }
-  }
-  .futuristic-card {
-    background: rgba(229, 231, 235, 0.9); /* Light grayish-blue, semi-transparent */
-    border: 1px solid rgba(147, 51, 234, 0.6);
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    padding: 32px;
-    position: relative;
-    z-index: 1;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .futuristic-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 30px rgba(147, 51, 234, 0.4);
-  }
-  .futuristic-header {
-    background: rgba(30, 30, 60, 0.7);
-    border: 2px solid transparent;
-    border-image: linear-gradient(90deg, #9333ea, #3b82f6) 1;
-    border-radius: 12px;
-    backdrop-filter: blur(8px);
-    padding: 16px;
-    box-shadow: 0 0 15px rgba(147, 51, 234, 0.5);
-    animation: pulse-header 6s infinite ease-in-out;
-  }
-  @keyframes pulse-header {
-    0%, 100% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.5); }
-    50% { box-shadow: 0 0 25px rgba(147, 51, 234, 0.8); }
-  }
-  .futuristic-text {
-    color: #1e3a8a; /* Darker text for contrast on light background */
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: none; /* Removed glow for better readability */
-  }
-  .futuristic-header-text {
-    color: #d4d4ff;
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 8px rgba(147, 51, 234, 0.5);
-    animation: glow-text 3s ease-in-out infinite;
-  }
-  @keyframes glow-text {
-    0%, 100% { text-shadow: 0 0 8px rgba(147, 51, 234, 0.5); }
-    50% { text-shadow: 0 0 12px rgba(96, 165, 250, 0.8); }
-  }
-  .futuristic-subtext {
-    color: #ffffff;
-    text-shadow: 0 0 4px rgba(96, 165, 250, 0.5);
-  }
-  .futuristic-input {
-    background: #ffffff; /* Fully opaque white for clarity */
-    border: 1px solid rgba(147, 51, 234, 0.5);
-    border-radius: 8px;
-    color: #1e3a8a;
-    padding: 12px;
-    width: 100%;
-    font-size: 16px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  .futuristic-input::placeholder {
-    color: rgba(107, 114, 128, 0.5);
-  }
-  .futuristic-input:focus {
-    outline: none;
-    border-color: #9333ea;
-    box-shadow: 0 0 8px rgba(147, 51, 234, 0.6);
-  }
-  .futuristic-button {
-    background: linear-gradient(90deg, #9333ea, #3b82f6);
-    border: none;
-    border-radius: 8px;
-    padding: 12px;
-    color: #fff;
-    font-weight: 600;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-  }
-  .futuristic-button:hover {
-    background: linear-gradient(90deg, #a855f7, #60a5fa);
-    box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
-  }
-  .futuristic-button:disabled {
-    background: rgba(255, 255, 255, 0.2);
-    cursor: not-allowed;
-  }
-  .upload-box {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px dashed rgba(147, 51, 234, 0.6);
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.3s ease;
-  }
-  .upload-box:hover {
-    border-color: rgba(147, 51, 234, 1);
-  }
-  .error-text {
-    color: #f87171;
-    text-shadow: 0 0 3px rgba(248, 113, 113, 0.3);
-  }
-  .success-text {
-    color: #60a5fa;
-    text-shadow: 0 0 3px rgba(96, 165, 250, 0.3);
-  }
-`;
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const { user, profile, fetchUserData } = useUser();
@@ -153,10 +16,33 @@ export default function ProfilePage() {
   const [fileName, setFileName] = useState('');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [resumeStats, setResumeStats] = useState({ total: 0, tailored: 0 });
 
   useEffect(() => {
     if (profile?.name) setName(profile.name);
+    fetchResumeStats();
   }, [profile]);
+
+  const fetchResumeStats = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('resume_history')
+        .select('id, tailored')
+        .eq('user_id', user.id);
+
+      if (data) {
+        setResumeStats({
+          total: data.length,
+          tailored: data.filter(r => r.tailored).length
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching resume stats:', error);
+    }
+  };
 
   const handleUpdateName = async () => {
     if (!name || !user) {
@@ -176,6 +62,7 @@ export default function ProfilePage() {
     fetchUserData();
     triggerConfetti();
     setMessage('Username updated successfully!');
+    setIsEditing(false);
   };
 
   const handleFileChange = (e) => {
@@ -235,7 +122,7 @@ export default function ProfilePage() {
 
       const { error: insertError } = await supabase.from('resume_history').insert({
         user_id: user.id,
-        job_title: file.name,
+        job_title: file.name.replace(/\.[^/.]+$/, ''),
         resume_url: urlData.publicUrl,
         file_name: file.name,
         file_type: file.type,
@@ -249,6 +136,7 @@ export default function ProfilePage() {
       setMessage('Resume uploaded successfully!');
       setFile(null);
       setFileName('');
+      fetchResumeStats();
       triggerConfetti();
     } catch (err) {
       console.error('Upload error:', err);
@@ -267,142 +155,236 @@ export default function ProfilePage() {
     });
   };
 
-  if (!user) return <Typography className="p-6 futuristic-text">Loading profile...</Typography>;
+  if (!user) return <Typography className="p-6 text-gray-600">Loading profile...</Typography>;
 
   return (
     <RequireAuth>
-      <style>{futuristicStyles}</style>
       <Navbar />
-       <div className="futuristic-bg px-4">
-         <div className="max-w-5xl w-full mx-auto py-10">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-6">
+          {/* Header */}
           <motion.div
-            className="futuristic-header text-center mb-12"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
           >
-            <Typography
-              variant="h3"
-              className="futuristic-header-text font-bold"
-              style={{
-                background: 'linear-gradient(90deg, #9333ea, #3b82f6)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Your Career Hub
-            </Typography>
-            <Typography className="futuristic-subtext mt-2" style={{ fontSize: '1.25rem' }}>
-              Manage your profile and resume to land your dream job.
-            </Typography>
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <User className="w-12 h-12 text-blue-600" />
+              <h1 className="text-5xl font-bold text-gray-900">Your Profile</h1>
+            </div>
+            <p className="text-xl text-gray-600">
+              Manage your personal information and resume uploads
+            </p>
           </motion.div>
 
           {message && (
-            <Typography
-              className={message.includes('Error') ? 'error-text' : 'success-text'}
-              style={{ textAlign: 'center', marginBottom: '24px' }}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mb-6 p-4 rounded-lg ${
+                message.includes('Error') || message.includes('Failed')
+                  ? 'bg-red-50 border border-red-200 text-red-700'
+                  : 'bg-green-50 border border-green-200 text-green-700'
+              }`}
             >
               {message}
-            </Typography>
+            </motion.div>
           )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6"> 
-            {/* Card 1: User Information */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Profile Information */}
             <motion.div
-              className="futuristic-card"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4 }}
+              className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-gray-200 p-8"
             >
-              <Typography variant="h6" className="futuristic-text mb-4 font-semibold">
-                Profile Details
-              </Typography>
-              <TextField
-                label="Username"
-                fullWidth
-                variant="standard"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mb-4"
-                InputProps={{ className: 'futuristic-input' }}
-                InputLabelProps={{ style: { color: '#6b7280' } }}
-                sx={{
-                  '& .MuiInput-root': {
-                    '&:before': { borderBottom: '1px solid rgba(147, 51, 234, 0.5)' },
-                    '&:after': { borderBottom: '2px solid #9333ea' },
-                    '&:hover:not(.Mui-disabled):before': { borderBottom: '1px solid #9333ea' },
-                  },
-                }}
-              />
-              <Typography className="futuristic-subtext mb-2 text-sm">
-                Email: {user.email}
-              </Typography>
-              <Typography className="futuristic-subtext mb-4 text-sm">
-                Joined: {new Date(profile?.signup_time).toLocaleDateString()}
-              </Typography>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <MuiButton
-                  className="futuristic-button"
-                  onClick={handleUpdateName}
-                  disabled={!name}
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">Personal Information</h2>
+                <motion.button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Update Profile
-                </MuiButton>
-              </motion.div>
+                  <Edit3 className="w-4 h-4" />
+                  {isEditing ? 'Cancel' : 'Edit'}
+                </motion.button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Avatar Section */}
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">
+                        {(profile?.name || user.email)?.[0]?.toUpperCase()}
+                      </span>
+                    </div>
+                    <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
+                      <Camera className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {profile?.name || 'Set your name'}
+                    </h3>
+                    <p className="text-gray-600">JobMate User</p>
+                  </div>
+                </div>
+
+                {/* Name Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Display Name
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-3">
+                      <TextField
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                        fullWidth
+                        variant="outlined"
+                      />
+                      <motion.button
+                        onClick={handleUpdateName}
+                        disabled={!name}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Save className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <span className="text-gray-900">{profile?.name || 'Not set'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Email Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <Mail className="w-5 h-5 text-gray-400" />
+                    <span className="text-gray-900">{user.email}</span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Verified</span>
+                  </div>
+                </div>
+
+                {/* Join Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Member Since
+                  </label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <Calendar className="w-5 h-5 text-gray-400" />
+                    <span className="text-gray-900">
+                      {new Date(profile?.signup_time || user.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
-            {/* Card 2: Resume Upload */}
+            {/* Stats & Quick Actions */}
             <motion.div
-              className="futuristic-card"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4 }}
+              className="space-y-6"
             >
-              <Typography variant="h6" className="futuristic-text mb-4 font-semibold">
-                Resume Upload
-              </Typography>
-              <Box className="upload-box mb-4">
-                <Typography className="futuristic-subtext text-sm">
-                  {fileName || 'Upload your resume (PDF, DOCX, TXT)'}
-                </Typography>
-              </Box>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <MuiButton
-                  variant="outlined"
-                  component="label"
-                  className="futuristic-button mr-4"
-                  sx={{ border: 'none' }}
-                >
-                  Select Resume
-                  <input
-                    type="file"
-                    hidden
-                    onChange={handleFileChange}
-                    accept=".txt,.docx,.pdf"
-                  />
-                </MuiButton>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <MuiButton
-                  className="futuristic-button"
-                  onClick={handleUpload}
-                  disabled={!file || uploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {uploading ? 'Uploading...' : 'Upload'}
-                </MuiButton>
-              </motion.div>
-            </motion.div>
+              {/* Stats Card */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Stats</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Resumes</span>
+                    <span className="text-2xl font-bold text-blue-600">{resumeStats.total}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">AI Tailored</span>
+                    <span className="text-2xl font-bold text-purple-600">{resumeStats.tailored}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Success Rate</span>
+                    <span className="text-2xl font-bold text-green-600">94%</span>
+                  </div>
+                </div>
+              </div>
 
-            {/* Card 3: Auto-Fill Application Details */}
-             {/* Full-width Card 3 */}
-            <motion.div
-                className="futuristic-card sm:col-span-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-              <ApplicationProfileForm user={user} />
+              {/* Resume Upload Card */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Resume</h3>
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-4">
+                    {fileName || 'Upload your resume (PDF, DOCX, TXT)'}
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors inline-block">
+                      Choose File
+                      <input
+                        type="file"
+                        hidden
+                        onChange={handleFileChange}
+                        accept=".txt,.docx,.pdf,.doc"
+                      />
+                    </label>
+                    
+                    {file && (
+                      <motion.button
+                        onClick={handleUpload}
+                        disabled={uploading}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {uploading ? 'Uploading...' : 'Upload Resume'}
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <motion.a
+                    href="/autofill"
+                    className="block w-full bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg transition-colors text-center"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Setup Auto-fill Profile
+                  </motion.a>
+                  <motion.a
+                    href="/history"
+                    className="block w-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 px-4 py-3 rounded-lg transition-colors text-center"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    View Resume History
+                  </motion.a>
+                  <motion.a
+                    href="/ai-tailoring"
+                    className="block w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg transition-colors text-center"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    AI Resume Tailoring
+                  </motion.a>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>

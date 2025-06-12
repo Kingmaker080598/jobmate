@@ -21,7 +21,8 @@ import {
   FileImage,
   X,
   Shield,
-  Clock
+  Clock,
+  History
 } from 'lucide-react';
 import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -46,6 +47,8 @@ const AIResumeTailoringCopilot = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [processingFile, setProcessingFile] = useState(false);
   const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
+  const [availableResumes, setAvailableResumes] = useState([]);
+  const [selectedResumeId, setSelectedResumeId] = useState(null);
 
   const toneOptions = [
     { value: 'professional', label: 'Professional', desc: 'Formal and corporate tone', gradient: 'from-blue-500 to-cyan-500' },
@@ -74,6 +77,38 @@ const AIResumeTailoringCopilot = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  const fetchAvailableResumes = useCallback(async () => {
+    if (!user) return;
+    
+    await executeWithErrorHandling(async () => {
+      const { data } = await supabase
+        .from('resume_history')
+        .select('id, job_title, content, file_name, created_at, tailored, match_score')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setAvailableResumes(data);
+        
+        // Check for pre-selected resume from localStorage
+        const selectedContent = localStorage.getItem('selectedResumeContent');
+        const selectedTitle = localStorage.getItem('selectedResumeTitle');
+        
+        if (selectedContent && selectedTitle) {
+          setResumeContent(selectedContent);
+          setOriginalFileName(selectedTitle);
+          setOriginalFileType('text/plain');
+          localStorage.removeItem('selectedResumeContent');
+          localStorage.removeItem('selectedResumeTitle');
+          toast.success('📄 Resume loaded from history!');
+        }
+      }
+    }, {
+      showToast: false,
+      context: { operation: 'fetch_resumes' }
+    });
+  }, [user, executeWithErrorHandling]);
 
   const fetchLatestResume = useCallback(async () => {
     if (!user) return;
@@ -132,6 +167,7 @@ const AIResumeTailoringCopilot = () => {
   }, [user, executeWithErrorHandling]);
 
   useEffect(() => {
+    fetchAvailableResumes();
     fetchLatestResume();
     
     // Check for data from scraper
@@ -141,7 +177,19 @@ const AIResumeTailoringCopilot = () => {
       localStorage.removeItem('jobDescriptionForTailoring');
       toast.success('📥 Job description loaded from scraper!');
     }
-  }, [fetchLatestResume]);
+  }, [fetchAvailableResumes, fetchLatestResume]);
+
+  const selectResumeFromHistory = (resume) => {
+    if (resume.content) {
+      setResumeContent(resume.content);
+      setOriginalFileName(resume.job_title);
+      setOriginalFileType('text/plain');
+      setSelectedResumeId(resume.id);
+      toast.success('📄 Resume selected from history!');
+    } else {
+      toast.error('This resume needs to be re-uploaded as it has no text content.');
+    }
+  };
 
   const isReadableText = (text) => {
     if (!text || text.length < 10) return false;
@@ -167,10 +215,10 @@ const AIResumeTailoringCopilot = () => {
     setProcessingFile(true);
 
     await executeWithErrorHandling(async () => {
+      console.log('Processing file:', file.name, file.type, file.size);
+
       const formData = new FormData();
       formData.append('file', file);
-
-      console.log('Processing file:', file.name, file.type, file.size);
 
       const response = await fetch('/api/process-resume', {
         method: 'POST',
@@ -187,7 +235,7 @@ const AIResumeTailoringCopilot = () => {
         setUploadedFile(file);
         
         // Refresh the resume list to show the newly uploaded resume
-        await fetchLatestResume();
+        await fetchAvailableResumes();
         
         return data;
       } else {
@@ -240,6 +288,7 @@ const AIResumeTailoringCopilot = () => {
                 created_at: new Date().toISOString()
               });
               console.log('Text file saved to database');
+              await fetchAvailableResumes();
             } catch (saveError) {
               console.error('Error saving text file to database:', saveError);
             }
@@ -408,6 +457,7 @@ const AIResumeTailoringCopilot = () => {
       });
 
       if (error) throw error;
+      await fetchAvailableResumes();
     }, {
       successMessage: '✅ Saved to resume history!',
       context: { operation: 'save_resume' }
@@ -488,7 +538,8 @@ const AIResumeTailoringCopilot = () => {
     setOriginalFileName('');
     setOriginalFileType('');
     setUploadedFile(null);
-    toast('Resume removed. Upload a new file to continue.', {
+    setSelectedResumeId(null);
+    toast('Resume removed. Upload a new file or select from history.', {
       icon: 'ℹ️',
       duration: 3000,
     });
@@ -578,54 +629,67 @@ const AIResumeTailoringCopilot = () => {
             <h2 className="text-3xl font-bold text-gray-900">Step 1: Setup & Job Analysis</h2>
           </div>
           
-          {/* Resume Upload Section */}
+          {/* Resume Selection Section */}
           <div className="mb-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">Upload Your Resume</h3>
-            <p className="text-gray-600 mb-6">
-              Upload your resume in any supported format. Our AI will extract and process the content automatically.
-            </p>
-            
-            {/* Supported Formats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              {supportedFormats.map((format) => (
-                <div key={format.ext} className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-                  <format.icon className={`w-8 h-8 text-${format.color}-500 mx-auto mb-2`} />
-                  <div className="text-sm font-semibold text-gray-900">{format.ext.toUpperCase()}</div>
-                  <div className="text-xs text-gray-500">{format.desc}</div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-900">Select or Upload Your Resume</h3>
+              {availableResumes.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <History className="w-4 h-4" />
+                  <span>{availableResumes.length} resumes in history</span>
                 </div>
-              ))}
+              )}
             </div>
-
-            {/* Upload Area */}
-            {!resumeContent ? (
-              <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-                <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-                <label className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg cursor-pointer transition-colors inline-block">
-                  {processingFile ? (
-                    <div className="flex items-center gap-2">
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      Processing...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Upload className="w-5 h-5" />
-                      Choose Resume File
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept=".txt,.pdf,.doc,.docx,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={handleResumeUpload}
-                    className="hidden"
-                    disabled={processingFile}
-                  />
-                </label>
-                <p className="text-sm text-gray-500 mt-4">
-                  Supports TXT, PDF, DOC, and DOCX files (max 10MB)
-                </p>
+            
+            {/* Resume History Selection */}
+            {availableResumes.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Choose from Your Resume History</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto">
+                  {availableResumes.map((resume) => (
+                    <motion.div
+                      key={resume.id}
+                      onClick={() => selectResumeFromHistory(resume)}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                        selectedResumeId === resume.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h5 className="font-semibold text-gray-900 text-sm">{resume.job_title}</h5>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(resume.created_at).toLocaleDateString()}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            {resume.tailored && (
+                              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
+                                AI Tailored
+                              </span>
+                            )}
+                            {resume.match_score && (
+                              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                                {resume.match_score}% Match
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {resume.content && (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div className="bg-white border border-green-200 rounded-lg p-6">
+            )}
+
+            {/* Current Resume Display */}
+            {resumeContent ? (
+              <div className="bg-white border border-green-200 rounded-lg p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-6 h-6 text-green-600" />
@@ -646,6 +710,51 @@ const AIResumeTailoringCopilot = () => {
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-32 overflow-y-auto">
                   <p className="text-sm text-gray-700 line-clamp-4">
                     {resumeContent.substring(0, 200)}...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6">
+                <p className="text-gray-600 mb-6">
+                  Upload your resume in any supported format. Our AI will extract and process the content automatically.
+                </p>
+                
+                {/* Supported Formats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  {supportedFormats.map((format) => (
+                    <div key={format.ext} className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                      <format.icon className={`w-8 h-8 text-${format.color}-500 mx-auto mb-2`} />
+                      <div className="text-sm font-semibold text-gray-900">{format.ext.toUpperCase()}</div>
+                      <div className="text-xs text-gray-500">{format.desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Upload Area */}
+                <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                  <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                  <label className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg cursor-pointer transition-colors inline-block">
+                    {processingFile ? (
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Processing...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Upload className="w-5 h-5" />
+                        Choose Resume File
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept=".txt,.pdf,.doc,.docx,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={handleResumeUpload}
+                      className="hidden"
+                      disabled={processingFile}
+                    />
+                  </label>
+                  <p className="text-sm text-gray-500 mt-4">
+                    Supports TXT, PDF, DOC, and DOCX files (max 10MB)
                   </p>
                 </div>
               </div>

@@ -14,9 +14,15 @@ import {
   Briefcase,
   Brain,
   TrendingUp,
-  Activity
+  Activity,
+  Save,
+  Edit3,
+  CheckCircle,
+  AlertCircle,
+  Shield,
+  Clock
 } from 'lucide-react';
-import { Switch, FormControlLabel, Chip } from '@mui/material';
+import { Switch, FormControlLabel, Chip, TextField, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
@@ -30,6 +36,29 @@ const SmartAutofillEngine = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
   const [platformDetected, setPlatformDetected] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    location: '',
+    linkedin_url: '',
+    portfolio_url: '',
+    github_url: '',
+    years_of_experience: '',
+    education: '',
+    pronouns: '',
+    gender: '',
+    race_ethnicity: '',
+    disability_status: '',
+    veteran_status: '',
+    work_auth_status: '',
+    needs_sponsorship: false,
+    willing_to_relocate: false,
+    prefers_remote: false,
+    expected_salary: ''
+  });
 
   const supportedPlatforms = [
     { name: 'LinkedIn', icon: Building, color: 'blue', pattern: 'linkedin.com', gradient: 'from-blue-500 to-cyan-500' },
@@ -52,6 +81,7 @@ const SmartAutofillEngine = () => {
 
       if (data) {
         setProfile(data);
+        setFormData(data);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
@@ -82,6 +112,29 @@ const SmartAutofillEngine = () => {
     fetchFillHistory();
   }, [fetchProfile, fetchFillHistory]);
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('application_profile')
+        .upsert({
+          ...formData,
+          user_id: user.id,
+          updated_at: new Date().toISOString()
+        }, { onConflict: ['user_id'] });
+
+      if (error) throw error;
+
+      setProfile(formData);
+      setIsEditing(false);
+      toast.success('✅ Profile saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('Failed to save profile');
+    }
+  };
+
   const analyzeCurrentPage = async () => {
     setIsAnalyzing(true);
     
@@ -89,20 +142,20 @@ const SmartAutofillEngine = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const mockFields = [
-        { id: 'firstName', label: 'First Name', type: 'text', confidence: 95, value: profile?.first_name || '', icon: User },
-        { id: 'lastName', label: 'Last Name', type: 'text', confidence: 95, value: profile?.last_name || '', icon: User },
-        { id: 'email', label: 'Email Address', type: 'email', confidence: 98, value: profile?.email || '', icon: Mail },
-        { id: 'phone', label: 'Phone Number', type: 'tel', confidence: 90, value: profile?.phone || '', icon: Phone },
-        { id: 'location', label: 'Location', type: 'text', confidence: 85, value: profile?.location || '', icon: MapPin },
-        { id: 'linkedin', label: 'LinkedIn Profile', type: 'url', confidence: 80, value: profile?.linkedin_url || '', icon: Building },
-        { id: 'experience', label: 'Years of Experience', type: 'number', confidence: 75, value: profile?.years_of_experience || '', icon: Briefcase },
+        { id: 'firstName', label: 'First Name', type: 'text', confidence: 95, value: formData?.first_name || '', icon: User },
+        { id: 'lastName', label: 'Last Name', type: 'text', confidence: 95, value: formData?.last_name || '', icon: User },
+        { id: 'email', label: 'Email Address', type: 'email', confidence: 98, value: formData?.email || '', icon: Mail },
+        { id: 'phone', label: 'Phone Number', type: 'tel', confidence: 90, value: formData?.phone || '', icon: Phone },
+        { id: 'location', label: 'Location', type: 'text', confidence: 85, value: formData?.location || '', icon: MapPin },
+        { id: 'linkedin', label: 'LinkedIn Profile', type: 'url', confidence: 80, value: formData?.linkedin_url || '', icon: Building },
+        { id: 'experience', label: 'Years of Experience', type: 'number', confidence: 75, value: formData?.years_of_experience || '', icon: Briefcase },
         { id: 'coverLetter', label: 'Cover Letter', type: 'textarea', confidence: 70, value: '', icon: Target }
       ];
       
       setDetectedFields(mockFields);
       setPlatformDetected('LinkedIn');
       setCurrentUrl('https://linkedin.com/jobs/apply/123456');
-      toast.success('✅ Page analyzed! Found ' + mockFields.length + ' fillable fields');
+      toast.success('✅ Demo form analyzed! Found ' + mockFields.length + ' fillable fields');
     } catch (error) {
       toast.error('Failed to analyze page');
     } finally {
@@ -136,7 +189,7 @@ const SmartAutofillEngine = () => {
         fetchFillHistory();
       }
 
-      toast.success('🎉 Form filled successfully!', { id: 'autofill' });
+      toast.success('🎉 Demo form filled successfully!', { id: 'autofill' });
     } catch (error) {
       toast.error('Autofill failed', { id: 'autofill' });
     }
@@ -228,7 +281,7 @@ const SmartAutofillEngine = () => {
         </p>
       </motion.div>
 
-      {/* Settings Panel */}
+      {/* Profile Setup Section */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -236,8 +289,251 @@ const SmartAutofillEngine = () => {
       >
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold flex items-center gap-4 text-gray-900">
+            <User className="w-8 h-8 text-blue-600" />
+            Application Profile Setup
+          </h2>
+          <div className="flex items-center gap-4">
+            {profile && !isEditing && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="w-5 h-5" />
+                <span className="text-sm font-medium">Profile Complete</span>
+              </div>
+            )}
+            <motion.button
+              onClick={() => setIsEditing(!isEditing)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Edit3 className="w-4 h-4" />
+              {isEditing ? 'Cancel' : 'Edit Profile'}
+            </motion.button>
+          </div>
+        </div>
+
+        {!profile && !isEditing && (
+          <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+            <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Setup Your Autofill Profile</h3>
+            <p className="text-gray-600 mb-6">
+              Complete your profile to enable intelligent form filling across job platforms
+            </p>
+            <motion.button
+              onClick={() => setIsEditing(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Setup Profile
+            </motion.button>
+          </div>
+        )}
+
+        {(isEditing || profile) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+              
+              <TextField
+                label="First Name"
+                value={formData.first_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Last Name"
+                value={formData.last_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Location"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+            </div>
+
+            {/* Professional Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
+              
+              <TextField
+                label="LinkedIn URL"
+                value={formData.linkedin_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Portfolio URL"
+                value={formData.portfolio_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, portfolio_url: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Years of Experience"
+                value={formData.years_of_experience}
+                onChange={(e) => setFormData(prev => ({ ...prev, years_of_experience: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Education"
+                value={formData.education}
+                onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+              
+              <TextField
+                label="Expected Salary"
+                value={formData.expected_salary}
+                onChange={(e) => setFormData(prev => ({ ...prev, expected_salary: e.target.value }))}
+                fullWidth
+                disabled={!isEditing}
+                variant={isEditing ? "outlined" : "filled"}
+              />
+            </div>
+
+            {/* Work Authorization & Preferences */}
+            {isEditing && (
+              <div className="md:col-span-2 space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Work Authorization & Preferences</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormControl fullWidth>
+                    <InputLabel>Work Authorization Status</InputLabel>
+                    <Select
+                      value={formData.work_auth_status}
+                      onChange={(e) => setFormData(prev => ({ ...prev, work_auth_status: e.target.value }))}
+                      label="Work Authorization Status"
+                    >
+                      <MenuItem value="">Prefer not to say</MenuItem>
+                      <MenuItem value="authorized">Authorized to work in the US</MenuItem>
+                      <MenuItem value="need_sponsorship">Need sponsorship now</MenuItem>
+                      <MenuItem value="future_sponsorship">Need sponsorship in future</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Gender</InputLabel>
+                    <Select
+                      value={formData.gender}
+                      onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                      label="Gender"
+                    >
+                      <MenuItem value="">Prefer not to say</MenuItem>
+                      <MenuItem value="Male">Male</MenuItem>
+                      <MenuItem value="Female">Female</MenuItem>
+                      <MenuItem value="Non-binary">Non-binary</MenuItem>
+                      <MenuItem value="Other">Other</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.willing_to_relocate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, willing_to_relocate: e.target.checked }))}
+                      />
+                    }
+                    label="Willing to relocate"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.prefers_remote}
+                        onChange={(e) => setFormData(prev => ({ ...prev, prefers_remote: e.target.checked }))}
+                      />
+                    }
+                    label="Prefers remote work"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.needs_sponsorship}
+                        onChange={(e) => setFormData(prev => ({ ...prev, needs_sponsorship: e.target.checked }))}
+                      />
+                    }
+                    label="Needs visa sponsorship"
+                  />
+                </div>
+              </div>
+            )}
+
+            {isEditing && (
+              <div className="md:col-span-2 flex justify-end gap-4 pt-6 border-t border-gray-200">
+                <motion.button
+                  onClick={() => setIsEditing(false)}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handleSaveProfile}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Save className="w-4 h-4" />
+                  Save Profile
+                </motion.button>
+              </div>
+            )}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Platform Support */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="bg-white rounded-lg shadow-lg p-8 mb-8"
+      >
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold flex items-center gap-4 text-gray-900">
             <Settings className="w-8 h-8 text-blue-600" />
-            Autofill Configuration
+            Supported Platforms
           </h2>
           <div className="flex items-center gap-4">
             <FormControlLabel
@@ -264,15 +560,15 @@ const SmartAutofillEngine = () => {
         </div>
       </motion.div>
 
-      {/* Current Page Analysis */}
+      {/* Page Analysis & Testing */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className="bg-white rounded-lg shadow-lg p-8 mb-8"
       >
         <h2 className="text-3xl font-bold mb-8 flex items-center gap-4 text-gray-900">
           <Target className="w-8 h-8 text-purple-600" />
-          Page Analysis & Detection
+          Test Autofill (Demo)
         </h2>
 
         {!detectedFields.length ? (
@@ -280,36 +576,41 @@ const SmartAutofillEngine = () => {
             <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-8 flex items-center justify-center">
               <Globe className="w-12 h-12 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-gray-900">Ready to Analyze</h3>
+            <h3 className="text-2xl font-bold mb-4 text-gray-900">Ready to Test</h3>
             <p className="text-gray-600 mb-8 text-lg">
-              Navigate to a job application page and let AI detect fillable fields
+              Test the autofill functionality with a simulated job application form
             </p>
             <motion.button
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-12 py-4 rounded-lg text-lg transition-colors"
               onClick={analyzeCurrentPage}
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || !profile}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               {isAnalyzing ? (
                 <div className="flex items-center gap-3">
                   <RefreshCw className="w-6 h-6 animate-spin" />
-                  AI Analyzing Page...
+                  Analyzing Demo Form...
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <Target className="w-6 h-6" />
-                  Analyze Current Page
+                  Test Autofill Demo
                 </div>
               )}
             </motion.button>
+            {!profile && (
+              <p className="text-red-600 text-sm mt-4">
+                Please complete your profile setup first
+              </p>
+            )}
           </div>
         ) : (
           <div>
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {platformDetected} Application Form
+                  Demo: {platformDetected} Application Form
                 </h3>
                 <p className="text-gray-600 text-lg">
                   {detectedFields.length} fields detected • {detectedFields.filter(f => f.confidence >= 90).length} high confidence
@@ -336,7 +637,7 @@ const SmartAutofillEngine = () => {
                 >
                   <div className="flex items-center gap-3">
                     <Zap className="w-5 h-5" />
-                    Fill Form with AI
+                    Fill Demo Form
                   </div>
                 </motion.button>
               </div>
