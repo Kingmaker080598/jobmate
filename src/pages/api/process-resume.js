@@ -1,6 +1,7 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
+import pdfParse from 'pdf-parse';
 import { handleError, ERROR_CODES } from '../../lib/errorHandler.js';
 import { supabase } from '../../lib/supabaseClient.js';
 
@@ -150,7 +151,7 @@ export default async function handler(req, res) {
         { format: 'TXT', description: 'Plain text (Recommended)', maxSize: '10MB' },
         { format: 'DOCX', description: 'Microsoft Word (2007+)', maxSize: '10MB' },
         { format: 'DOC', description: 'Microsoft Word (Legacy)', maxSize: '10MB' },
-        { format: 'PDF', description: 'PDF Document (Limited support)', maxSize: '10MB' }
+        { format: 'PDF', description: 'PDF Document', maxSize: '10MB' }
       ]
     });
   } finally {
@@ -178,13 +179,37 @@ async function extractTextFile(filePath) {
 }
 
 async function extractPDFText(filePath, fileName) {
-  // Enhanced PDF handling with better error messages
-  throw new Error(`PDF processing is currently limited. For best results, please:
-1. Save your PDF as a Word document (.docx)
-2. Copy the text and save as a .txt file
-3. Use our web interface to paste the content directly
+  try {
+    console.log('Extracting text from PDF document:', filePath);
+    
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(dataBuffer);
+    
+    console.log('PDF extraction result:', {
+      hasText: !!data.text,
+      textLength: data.text?.length || 0,
+      numPages: data.numpages || 0
+    });
+    
+    if (!data.text || data.text.trim().length === 0) {
+      throw new Error('No text content found in PDF document. The file may contain only images, be corrupted, or be password-protected.');
+    }
 
-This ensures 100% accuracy in text extraction.`);
+    console.log('Successfully extracted text from PDF document, length:', data.text.length);
+    return data.text;
+  } catch (error) {
+    console.error('PDF extraction error:', error);
+    
+    if (error.message.includes('ENOENT')) {
+      throw new Error('PDF document file not found or corrupted.');
+    } else if (error.message.includes('password')) {
+      throw new Error('Password-protected PDF documents are not supported. Please remove password protection and try again.');
+    } else if (error.message.includes('Invalid PDF')) {
+      throw new Error('The PDF document appears to be corrupted or invalid. Please try saving it again or converting to TXT format.');
+    } else {
+      throw new Error('Failed to extract text from PDF document. The file may be corrupted, in an unsupported format, or contain only images. For best results, try converting to DOCX or TXT format.');
+    }
+  }
 }
 
 async function extractWordText(filePath) {
