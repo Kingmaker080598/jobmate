@@ -24,34 +24,32 @@ export default async function handler(req, res) {
     const { token } = req.query;
     let userId = null;
 
-    console.log('Received token:', token); // Log the raw token
+    console.log('Profile API called with token:', token ? 'present' : 'missing');
 
     if (token) {
       // Verify token from query parameter
       try {
-        // Add padding if needed
-        const paddedToken = token.padEnd(token.length + (4 - (token.length % 4)) % 4, '=');
-        console.log('Padded token:', paddedToken);
+        // Decode the base64 token
+        let decodedToken;
+        try {
+          decodedToken = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+        } catch (decodeError) {
+          // Try with padding
+          const paddedToken = token.padEnd(token.length + (4 - (token.length % 4)) % 4, '=');
+          decodedToken = JSON.parse(Buffer.from(paddedToken, 'base64').toString('utf-8'));
+        }
         
-        const decoded = JSON.parse(Buffer.from(paddedToken, 'base64').toString('utf-8'));
-        console.log('Decoded token:', decoded);
+        console.log('Decoded token:', { userId: decodedToken.userId, hasExp: !!decodedToken.exp });
         
-        if (decoded.userId && decoded.exp > Date.now()) {
-          userId = decoded.userId;
+        if (decodedToken.userId && decodedToken.exp > Date.now()) {
+          userId = decodedToken.userId;
           console.log('Valid userId from token:', userId);
         } else {
-          console.error('Token expired or invalid:', decoded);
+          console.error('Token expired or invalid:', { exp: decodedToken.exp, now: Date.now() });
           return res.status(401).json({ error: 'Token expired or invalid' });
         }
       } catch (e) {
-        console.error('Token decode error:', e);
-        // Try to log the raw decoded string to see what's happening
-        try {
-          const rawDecoded = Buffer.from(token, 'base64').toString('utf-8');
-          console.log('Raw decoded token string:', rawDecoded);
-        } catch (decodeErr) {
-          console.error('Failed to even decode base64:', decodeErr);
-        }
+        console.error('Token decode error:', e.message);
         return res.status(400).json({ error: 'Invalid token format', details: e.message });
       }
     } else {
@@ -69,70 +67,51 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('Successfully decoded userId:', userId);
-    
-    // For debugging, return a simple response to see if we get past token decoding
-    // Comment this out after testing
-    /*
-    return res.status(200).json({
-      debug: true,
-      userId: userId,
-      authenticated: true
-    });
-    */
+    console.log('Fetching profile for user ID:', userId);
 
-    console.log('Fetching profile for user ID:', userId); // Add logging
-
-    // First, get basic user info from the users table
-    console.log('Querying users table for ID:', userId);
+    // Fetch user data from users table
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single();
     
-    console.log('User query result:', user ? 'Found user' : 'No user found');
-    if (userError) {
-      console.error('User fetch error details:', JSON.stringify(userError));
+    if (userError && userError.code !== 'PGRST116') {
+      console.error('User fetch error:', userError);
     }
     
-    // Then, get detailed profile from application_profile table
-    console.log('Querying application_profile table for user_id:', userId);
+    // Fetch detailed profile from application_profile table
     const { data: profile, error: profileError } = await supabase
       .from('application_profile')
       .select('*')
       .eq('user_id', userId)
       .single();
     
-    console.log('Profile query result:', profile ? 'Found profile' : 'No profile found');
-    if (profileError) {
-      console.error('Profile fetch error details:', JSON.stringify(profileError));
-    }
-
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+    if (profileError && profileError.code !== 'PGRST116') {
       console.error('Profile fetch error:', profileError);
-      
-      // If both queries failed, return an error
-      if (userError) {
-        return res.status(500).json({ 
-          error: 'Failed to fetch user data',
-          details: userError.message,
-          code: userError.code
-        });
-      }
     }
 
     // Combine the data from both tables
     const combinedProfile = {
       ...(user || {}),
       ...(profile || {}),
-      authenticated: true
+      authenticated: true,
+      user_id: userId // Ensure user_id is always present for extension
     };
 
-    // If we have no data at all, return an error
-    if (Object.keys(combinedProfile).length <= 1) { // Only has 'authenticated' property
-      return res.status(404).json({ error: 'Profile not found' });
+    // Ensure we have at least basic user data
+    if (!user && !profile) {
+      return res.status(404).json({ 
+        error: 'Profile not found',
+        suggestion: 'Please complete your profile setup in JobMate'
+      });
     }
+
+    console.log('Profile fetch successful:', {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      combinedKeys: Object.keys(combinedProfile)
+    });
 
     // Return the combined profile data
     return res.status(200).json(combinedProfile);

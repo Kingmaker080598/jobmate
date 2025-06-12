@@ -19,30 +19,54 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  try {
-    // Get session from cookies
-    const { data: { session } } = await supabase.auth.getSession();
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-    if (!session) {
+  try {
+    console.log('Extension token request received');
+    
+    // Get session from cookies/headers
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return res.status(500).json({ error: 'Session validation failed' });
+    }
+
+    if (!session || !session.user) {
+      console.log('No active session found');
       return res.status(401).json({
         error: 'not_authenticated',
-        description: 'The user does not have an active session or is not authenticated',
+        description: 'No active session found',
       });
     }
+
+    console.log('Active session found for user:', session.user.id);
 
     // Create a token with user ID and expiration (24 hours)
     const tokenData = {
       userId: session.user.id,
+      email: session.user.email,
       exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
     };
 
     // Encode token as base64
     const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
 
+    console.log('Token generated successfully for user:', session.user.id);
+
     // Return the token
-    return res.status(200).json({ token });
+    return res.status(200).json({ 
+      token,
+      expiresAt: tokenData.exp,
+      userId: session.user.id
+    });
   } catch (error) {
     console.error('Token generation error:', error);
-    return res.status(500).json({ error: 'Failed to generate token' });
+    return res.status(500).json({ 
+      error: 'Failed to generate token',
+      details: error.message
+    });
   }
 }
