@@ -79,6 +79,8 @@ const AIResumeTailoringCopilot = () => {
     if (!user) return;
     
     await executeWithErrorHandling(async () => {
+      console.log('Fetching latest resume for user:', user.id);
+      
       const { data } = await supabase
         .from('resume_history')
         .select('*')
@@ -86,22 +88,42 @@ const AIResumeTailoringCopilot = () => {
         .order('created_at', { ascending: false })
         .limit(1);
 
+      console.log('Resume fetch result:', data);
+
       if (data && data.length > 0) {
         const resume = data[0];
-        if (resume.content) {
+        console.log('Found resume:', {
+          hasContent: !!resume.content,
+          contentLength: resume.content?.length || 0,
+          hasUrl: !!resume.resume_url,
+          fileName: resume.file_name
+        });
+        
+        if (resume.content && resume.content.trim().length > 50) {
           setResumeContent(resume.content);
           setOriginalFileName(resume.file_name || 'Previous Resume');
-          setOriginalFileType('text/plain');
+          setOriginalFileType(resume.file_type || 'text/plain');
+          console.log('Using resume content from database');
         } else if (resume.resume_url) {
-          const response = await fetch(resume.resume_url);
-          const text = await response.text();
-          
-          if (isReadableText(text)) {
-            setResumeContent(text);
-            setOriginalFileName(resume.file_name || 'Previous Resume');
-            setOriginalFileType(resume.file_type || 'text/plain');
+          console.log('Attempting to fetch resume from URL...');
+          try {
+            const response = await fetch(resume.resume_url);
+            const text = await response.text();
+            
+            if (isReadableText(text)) {
+              setResumeContent(text);
+              setOriginalFileName(resume.file_name || 'Previous Resume');
+              setOriginalFileType(resume.file_type || 'text/plain');
+              console.log('Successfully fetched resume from URL');
+            } else {
+              console.log('Resume from URL is not readable text');
+            }
+          } catch (urlError) {
+            console.error('Failed to fetch resume from URL:', urlError);
           }
         }
+      } else {
+        console.log('No resume found in database');
       }
     }, {
       showToast: false,
@@ -148,25 +170,32 @@ const AIResumeTailoringCopilot = () => {
       const formData = new FormData();
       formData.append('file', file);
 
+      console.log('Processing file:', file.name, file.type, file.size);
+
       const response = await fetch('/api/process-resume', {
         method: 'POST',
         body: formData
       });
 
       const data = await response.json();
+      console.log('File processing response:', data);
 
       if (response.ok && data.content) {
         setResumeContent(data.content);
         setOriginalFileName(file.name);
         setOriginalFileType(file.type);
         setUploadedFile(file);
+        
+        // Refresh the resume list to show the newly uploaded resume
+        await fetchLatestResume();
+        
         return data;
       } else {
         throw new Error(data.error || 'Failed to process file');
       }
     }, {
       loadingMessage: 'Processing your resume...',
-      successMessage: '✅ Resume processed successfully!',
+      successMessage: '✅ Resume processed and saved successfully!',
       context: { operation: 'file_processing', fileName: file.name, fileSize: file.size }
     });
 
@@ -198,6 +227,24 @@ const AIResumeTailoringCopilot = () => {
           setOriginalFileName(file.name);
           setOriginalFileType(file.type);
           setUploadedFile(file);
+          
+          // Save to database
+          if (user) {
+            try {
+              await supabase.from('resume_history').insert({
+                user_id: user.id,
+                job_title: file.name.replace(/\.[^/.]+$/, ''),
+                content: text,
+                file_name: file.name,
+                file_type: file.type,
+                created_at: new Date().toISOString()
+              });
+              console.log('Text file saved to database');
+            } catch (saveError) {
+              console.error('Error saving text file to database:', saveError);
+            }
+          }
+          
           toast.success('✅ Resume uploaded successfully!');
         } else {
           toast.error('File content is not readable. Please check your file.');
@@ -267,13 +314,13 @@ const AIResumeTailoringCopilot = () => {
   };
 
   const generateTailoredResume = async () => {
-    if (!resumeContent || !jobDescription) {
-      toast.error('Please ensure you have both resume content and job description');
+    if (!resumeContent && !user) {
+      toast.error('Please upload your resume first or sign in to use your saved resume');
       return;
     }
 
-    if (!isReadableText(resumeContent)) {
-      toast.error('Resume content is not in a readable format. Please upload a different file.');
+    if (!jobDescription) {
+      toast.error('Please paste a job description first');
       return;
     }
 
@@ -285,11 +332,18 @@ const AIResumeTailoringCopilot = () => {
     setStep(4);
 
     await executeWithErrorHandling(async () => {
+      console.log('Generating tailored resume with:', {
+        hasResumeContent: !!resumeContent,
+        resumeContentLength: resumeContent?.length || 0,
+        jobDescriptionLength: jobDescription.length,
+        keywordCount: keywords.length
+      });
+
       const response = await fetch('/api/generate-tailored-resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          resumeContent, 
+          resumeContent, // This might be empty, API will fetch from database
           jobDescription, 
           toneStyle,
           keywords: keywords.slice(0, 10)
@@ -297,6 +351,7 @@ const AIResumeTailoringCopilot = () => {
       });
 
       const data = await response.json();
+      console.log('Resume generation response:', data);
       
       if (response.ok) {
         if (isReadableText(data.tailoredResume)) {
@@ -325,7 +380,7 @@ const AIResumeTailoringCopilot = () => {
       retries: 2,
       context: { 
         operation: 'resume_tailoring',
-        resumeLength: resumeContent.length,
+        resumeLength: resumeContent?.length || 0,
         keywordCount: keywords.length
       }
     });
@@ -782,7 +837,7 @@ const AIResumeTailoringCopilot = () => {
               <motion.button
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={generateTailoredResume}
-                disabled={!resumeContent || isLoading || !networkStatus}
+                disabled={isLoading || !networkStatus}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -809,12 +864,12 @@ const AIResumeTailoringCopilot = () => {
               </motion.button>
             </div>
 
-            {!resumeContent && (
+            {!resumeContent && !user && (
               <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-yellow-600" />
                   <p className="text-yellow-800">
-                    <strong>No resume detected.</strong> Please upload your resume to continue with AI tailoring.
+                    <strong>No resume detected.</strong> Please upload your resume above or sign in to use your saved resume.
                   </p>
                 </div>
               </div>

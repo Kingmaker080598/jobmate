@@ -2,6 +2,7 @@ import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
 import { handleError, ERROR_CODES } from '../../lib/errorHandler.js';
+import { supabase } from '../../lib/supabaseClient.js';
 
 export const config = {
   api: {
@@ -37,6 +38,8 @@ export default async function handler(req, res) {
     const mimeType = file.mimetype;
     const fileSize = file.size;
 
+    console.log('Processing file:', { fileName, mimeType, fileSize });
+
     // Validate file size
     if (fileSize > 10 * 1024 * 1024) {
       throw new Error('File size exceeds 10MB limit. Please compress your file or convert to TXT format.');
@@ -63,7 +66,9 @@ export default async function handler(req, res) {
         extractedText = await extractPDFText(tempFilePath, fileName);
       } else if (
         mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        mimeType === 'application/msword'
+        mimeType === 'application/msword' ||
+        fileName.toLowerCase().endsWith('.docx') ||
+        fileName.toLowerCase().endsWith('.doc')
       ) {
         extractedText = await extractWordText(tempFilePath);
       } else {
@@ -79,7 +84,33 @@ export default async function handler(req, res) {
 
       // Validate content quality
       if (!isValidResumeContent(extractedText)) {
-        throw new Error('The extracted content doesn\'t appear to be a resume. Please ensure your file contains resume text.');
+        console.warn('Content may not be a resume, but proceeding with extraction');
+      }
+
+      // Get user session to save to database
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log('Saving extracted content to database for user:', session.user.id);
+        
+        // Save the extracted content to resume_history table
+        const { error: saveError } = await supabase
+          .from('resume_history')
+          .insert({
+            user_id: session.user.id,
+            job_title: fileName.replace(/\.[^/.]+$/, ''), // Remove file extension
+            content: extractedText, // Store the extracted text content
+            file_name: fileName,
+            file_type: mimeType,
+            created_at: new Date().toISOString()
+          });
+
+        if (saveError) {
+          console.error('Error saving to database:', saveError);
+          // Don't fail the request if database save fails
+        } else {
+          console.log('Successfully saved extracted content to database');
+        }
       }
 
       res.status(200).json({
@@ -88,10 +119,12 @@ export default async function handler(req, res) {
         fileName: fileName,
         fileType: mimeType,
         length: extractedText.length,
-        quality: assessContentQuality(extractedText)
+        quality: assessContentQuality(extractedText),
+        message: 'Resume content extracted and saved successfully'
       });
 
     } catch (extractionError) {
+      console.error('Extraction error:', extractionError);
       const jobMateError = handleError(extractionError, {
         operation: 'file_extraction',
         fileName,
@@ -156,25 +189,39 @@ This ensures 100% accuracy in text extraction.`);
 
 async function extractWordText(filePath) {
   try {
+    console.log('Extracting text from Word document:', filePath);
+    
     const result = await mammoth.extractRawText({ path: filePath });
     
+    console.log('Mammoth extraction result:', {
+      hasValue: !!result.value,
+      valueLength: result.value?.length || 0,
+      messagesCount: result.messages?.length || 0
+    });
+    
     if (!result.value || result.value.trim().length === 0) {
-      throw new Error('No text content found in Word document. The file may contain only images or be corrupted.');
+      throw new Error('No text content found in Word document. The file may contain only images, be corrupted, or be password-protected.');
     }
 
     // Check for extraction warnings
     if (result.messages && result.messages.length > 0) {
       console.warn('Word extraction warnings:', result.messages);
+      // Don't fail on warnings, just log them
     }
 
+    console.log('Successfully extracted text from Word document, length:', result.value.length);
     return result.value;
   } catch (error) {
+    console.error('Word extraction error:', error);
+    
     if (error.message.includes('ENOENT')) {
       throw new Error('Word document file not found or corrupted.');
     } else if (error.message.includes('password')) {
       throw new Error('Password-protected Word documents are not supported. Please remove password protection and try again.');
+    } else if (error.message.includes('not a valid zip file')) {
+      throw new Error('The Word document appears to be corrupted. Please try saving it again or converting to TXT format.');
     } else {
-      throw new Error('Failed to extract text from Word document. The file may be corrupted or in an unsupported format.');
+      throw new Error('Failed to extract text from Word document. The file may be corrupted, in an unsupported format, or contain only images. Try converting to TXT format.');
     }
   }
 }
@@ -209,8 +256,8 @@ function isValidResumeContent(text) {
     lowerText.includes(indicator)
   );
 
-  // Should have at least 3 resume indicators and reasonable length
-  return foundIndicators.length >= 3 && text.length >= 100;
+  // Should have at least 2 resume indicators and reasonable length
+  return foundIndicators.length >= 2 && text.length >= 50;
 }
 
 function assessContentQuality(text) {
