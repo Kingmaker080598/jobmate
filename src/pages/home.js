@@ -6,31 +6,29 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
-  Target, 
-  BarChart3, 
   Globe, 
   Zap, 
+  BarChart3, 
   Brain, 
-  Rocket, 
-  Shield, 
   TrendingUp,
-  MessageCircle,
   ChevronRight,
   Activity,
   Clock,
   CheckCircle2,
   ArrowUpRight,
-  User
+  User,
+  Target,
+  FileText,
+  Rocket
 } from 'lucide-react';
 
 export default function HomePage() {
   const { user, profile } = useUser();
-  const [showChat, setShowChat] = useState(false);
   const [stats, setStats] = useState({
-    applicationsToday: 12,
+    resumesGenerated: 8,
     matchScore: 94,
-    jobsScraped: 156,
-    profileViews: 89
+    jobsScraped: 23,
+    applicationsTracked: 12
   });
   const router = useRouter();
 
@@ -56,7 +54,8 @@ export default function HomePage() {
       icon: Sparkles,
       href: '/ai-tailoring',
       gradient: 'from-purple-500 to-pink-500',
-      stats: '94% Match Rate'
+      stats: '94% Match Rate',
+      primary: true
     },
     {
       title: 'Smart Job Scraper',
@@ -64,10 +63,10 @@ export default function HomePage() {
       icon: Globe,
       href: '/scraper',
       gradient: 'from-green-500 to-teal-500',
-      stats: '156 Jobs Found'
+      stats: '23 Jobs Found'
     },
     {
-      title: 'Auto-Fill Engine',
+      title: 'Smart Autofill',
       description: 'Fill applications with 95% accuracy',
       icon: Zap,
       href: '/autofill',
@@ -85,10 +84,10 @@ export default function HomePage() {
   ];
 
   const achievements = [
-    { label: 'Resume Optimized', value: '100%', icon: CheckCircle2, color: 'green' },
+    { label: 'AI Match Score', value: '94%', icon: Brain, color: 'purple' },
     { label: 'Profile Complete', value: '95%', icon: Activity, color: 'blue' },
-    { label: 'AI Training', value: '87%', icon: Brain, color: 'purple' },
-    { label: 'Success Rate', value: '94%', icon: TrendingUp, color: 'cyan' }
+    { label: 'Resumes Generated', value: '8', icon: FileText, color: 'green' },
+    { label: 'Success Rate', value: '87%', icon: TrendingUp, color: 'cyan' }
   ];
 
   return (
@@ -103,7 +102,7 @@ export default function HomePage() {
           className="text-center mb-12"
         >
           <motion.h1 
-            className="text-6xl md:text-7xl font-bold mb-6 cyber-heading text-gray-900"
+            className="text-5xl md:text-6xl font-bold mb-6 text-gray-900"
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
@@ -112,19 +111,19 @@ export default function HomePage() {
           </motion.h1>
           
           <motion.p 
-            className="text-xl md:text-2xl text-gray-600 mb-8 elegant-text"
+            className="text-xl md:text-2xl text-gray-600 mb-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            Your AI-powered career acceleration platform is ready
+            Your AI-powered career acceleration platform
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-wrap justify-center gap-4 mb-8"
+            className="flex flex-wrap justify-center gap-6 mb-8"
           >
             {achievements.map((achievement, index) => (
               <div key={index} className="glass-card p-4 text-center hover-lift">
@@ -143,42 +142,13 @@ export default function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Launch AI Copilot
-              <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <div className="flex items-center gap-3">
+                <Rocket className="w-5 h-5" />
+                Launch AI Copilot
+                <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
             </motion.button>
           </Link>
-        </motion.div>
-
-        {/* Stats Dashboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12"
-        >
-          <div className="glass-card p-6 text-center hover-lift">
-            <Target className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-blue-600">{stats.applicationsToday}</div>
-            <div className="text-gray-500 text-sm">Applications Today</div>
-          </div>
-          
-          <div className="glass-card p-6 text-center hover-lift">
-            <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-green-600">{stats.matchScore}%</div>
-            <div className="text-gray-500 text-sm">AI Match Score</div>
-          </div>
-          
-          <div className="glass-card p-6 text-center hover-lift">
-            <Globe className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-purple-600">{stats.jobsScraped}</div>
-            <div className="text-gray-500 text-sm">Jobs Discovered</div>
-          </div>
-          
-          <div className="glass-card p-6 text-center hover-lift">
-            <Activity className="w-8 h-8 text-orange-600 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-orange-600">{stats.profileViews}</div>
-            <div className="text-gray-500 text-sm">Profile Views</div>
-          </div>
         </motion.div>
 
         {/* Quick Actions Grid */}
@@ -188,7 +158,7 @@ export default function HomePage() {
           transition={{ delay: 0.8 }}
           className="mb-12"
         >
-          <h2 className="text-3xl font-bold mb-8 text-center text-gray-900 cyber-heading">
+          <h2 className="text-3xl font-bold mb-8 text-center text-gray-900">
             AI-Powered Tools
           </h2>
           
@@ -196,7 +166,9 @@ export default function HomePage() {
             {quickActions.map((action, index) => (
               <Link key={index} href={action.href}>
                 <motion.div
-                  className="bg-white border border-gray-200 rounded-lg p-8 hover-lift cursor-pointer group"
+                  className={`bg-white border border-gray-200 rounded-xl p-8 hover-lift cursor-pointer group transition-all duration-300 ${
+                    action.primary ? 'ring-2 ring-purple-200 bg-gradient-to-br from-purple-50 to-pink-50' : ''
+                  }`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.9 + index * 0.1 }}
@@ -216,7 +188,7 @@ export default function HomePage() {
                     {action.title}
                   </h3>
                   
-                  <p className="text-gray-600 mb-4 elegant-text">
+                  <p className="text-gray-600 mb-4">
                     {action.description}
                   </p>
                   
@@ -243,7 +215,7 @@ export default function HomePage() {
             {[
               { action: 'Resume tailored for Software Engineer role', time: '2 minutes ago', status: 'success' },
               { action: 'Job scraped from LinkedIn', time: '15 minutes ago', status: 'processing' },
-              { action: 'Application submitted to TechCorp', time: '1 hour ago', status: 'success' },
+              { action: 'Application form auto-filled', time: '1 hour ago', status: 'success' },
               { action: 'Profile optimization completed', time: '3 hours ago', status: 'success' }
             ].map((activity, index) => (
               <motion.div
@@ -254,7 +226,10 @@ export default function HomePage() {
                 transition={{ delay: 1.3 + index * 0.1 }}
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`w-3 h-3 rounded-full status-${activity.status}`} />
+                  <div className={`w-3 h-3 rounded-full ${
+                    activity.status === 'success' ? 'bg-green-500' : 
+                    activity.status === 'processing' ? 'bg-blue-500 animate-pulse' : 'bg-red-500'
+                  }`} />
                   <span className="text-gray-700">{activity.action}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-500 text-sm">
@@ -266,44 +241,6 @@ export default function HomePage() {
           </div>
         </motion.div>
       </div>
-
-      {/* AI Assistant Chat Button */}
-      <motion.button
-        onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 flex items-center justify-center group"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        animate={{ 
-          boxShadow: [
-            '0 0 20px rgba(147, 51, 234, 0.5)', 
-            '0 0 40px rgba(236, 72, 153, 0.8)', 
-            '0 0 20px rgba(147, 51, 234, 0.5)'
-          ] 
-        }}
-        transition={{ repeat: Infinity, duration: 2 }}
-      >
-        <MessageCircle className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
-      </motion.button>
-
-      {/* AI Assistant Chat - Import and use the component when needed */}
-      {showChat && (
-        <div className="fixed bottom-24 right-8 w-96 h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold">JobMate AI Assistant</h3>
-              <button onClick={() => setShowChat(false)} className="text-white hover:text-gray-200">
-                ×
-              </button>
-            </div>
-          </div>
-          <div className="p-4 h-full flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <Brain className="w-12 h-12 mx-auto mb-4 text-purple-500" />
-              <p>AI Assistant coming soon!</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

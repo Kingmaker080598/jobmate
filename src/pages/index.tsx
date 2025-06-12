@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Rocket, FileText, Brain, Lightbulb, Clock, ClipboardCheck, Sparkles, Zap, Target } from 'lucide-react';
+import { Rocket, FileText, Brain, Lightbulb, Clock, ClipboardCheck, Sparkles, Zap, Target, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -158,7 +158,7 @@ export default function LandingPage() {
             { icon: FileText, title: 'Upload Resume', desc: 'Upload your master resume once', gradient: 'from-blue-500 to-cyan-500' },
             { icon: Brain, title: 'AI Analysis', desc: 'AI analyzes job requirements', gradient: 'from-purple-500 to-pink-500' },
             { icon: Zap, title: 'Smart Tailoring', desc: 'Generate perfect matches instantly', gradient: 'from-green-500 to-teal-500' },
-            { icon: Target, title: 'Auto-Apply', desc: 'Apply to jobs automatically', gradient: 'from-orange-500 to-red-500' },
+            { icon: Target, title: 'Apply Smart', desc: 'Use autofill for faster applications', gradient: 'from-orange-500 to-red-500' },
           ].map((step, index) => (
             <motion.div
               key={index}
@@ -191,29 +191,29 @@ export default function LandingPage() {
             Why Choose JobMate?
           </h2>
           <p className="text-xl text-gray-600 elegant-text max-w-3xl mx-auto">
-            Elevate your career with AI that&apos;s fast, precise, and designed for success. JobMate is your edge in the job market.
+            Elevate your career with AI that&apos;s fast, precise, and designed for success
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              icon: Lightbulb,
-              title: 'Intelligent AI Tailoring',
+              icon: Sparkles,
+              title: 'AI Resume Tailoring',
               text: 'Our AI crafts resumes that align perfectly with job descriptions, highlighting your strengths.',
-              gradient: 'from-yellow-500 to-orange-500'
+              gradient: 'from-purple-500 to-pink-500'
             },
             {
-              icon: Clock,
-              title: 'Lightning Speed',
-              text: 'Skip hours of editing. Get polished, job-ready resumes in moments.',
-              gradient: 'from-blue-500 to-purple-500'
-            },
-            {
-              icon: ClipboardCheck,
-              title: 'Smart Tracking',
-              text: 'Monitor your applications and resume history in a sleek, unified dashboard.',
+              icon: Globe,
+              title: 'Smart Job Scraping',
+              text: 'Extract job details from any platform with our intelligent web scraper.',
               gradient: 'from-green-500 to-teal-500'
+            },
+            {
+              icon: Zap,
+              title: 'Intelligent Autofill',
+              text: 'Fill application forms instantly with 95% accuracy using your saved profile.',
+              gradient: 'from-yellow-500 to-orange-500'
             },
           ].map((feature, index) => (
             <motion.div
@@ -274,7 +274,7 @@ export default function LandingPage() {
             <span className="text-xl font-bold text-gray-900">JobMate</span>
           </div>
           <p className="text-gray-600 elegant-text mb-6">
-            JobMate © {new Date().getFullYear()} | Built with ❤️ for all job seekers, powered by AI
+            JobMate © {new Date().getFullYear()} | Built with ❤️ for job seekers, powered by AI
           </p>
           <div className="flex justify-center gap-8 text-sm">
             <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">About</Link>
