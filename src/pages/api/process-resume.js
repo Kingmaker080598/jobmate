@@ -1,6 +1,7 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
+import { handleError, ERROR_CODES } from '../../lib/errorHandler.js';
 
 export const config = {
   api: {
@@ -13,6 +14,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let tempFilePath = null;
+
   try {
     const form = formidable({
       maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -23,71 +26,132 @@ export default async function handler(req, res) {
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
 
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ 
+        error: 'No file uploaded',
+        suggestions: ['Please select a file to upload', 'Supported formats: TXT, PDF, DOC, DOCX']
+      });
     }
 
-    const filePath = file.filepath;
+    tempFilePath = file.filepath;
     const fileName = file.originalFilename || 'unknown';
     const mimeType = file.mimetype;
+    const fileSize = file.size;
+
+    // Validate file size
+    if (fileSize > 10 * 1024 * 1024) {
+      throw new Error('File size exceeds 10MB limit. Please compress your file or convert to TXT format.');
+    }
+
+    // Validate file type
+    const supportedTypes = [
+      'text/plain',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword'
+    ];
+
+    if (!supportedTypes.includes(mimeType) && !fileName.match(/\.(txt|pdf|docx|doc)$/i)) {
+      throw new Error('Unsupported file format. Please upload TXT, PDF, DOC, or DOCX files.');
+    }
 
     let extractedText = '';
 
     try {
       if (mimeType === 'text/plain') {
-        // Handle plain text files
-        extractedText = fs.readFileSync(filePath, 'utf8');
+        extractedText = await extractTextFile(tempFilePath);
       } else if (mimeType === 'application/pdf') {
-        // Handle PDF files - simplified approach
-        extractedText = await extractPDFTextSimple(filePath);
+        extractedText = await extractPDFText(tempFilePath, fileName);
       } else if (
         mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
         mimeType === 'application/msword'
       ) {
-        // Handle Word documents
-        extractedText = await extractWordText(filePath);
+        extractedText = await extractWordText(tempFilePath);
       } else {
-        throw new Error('Unsupported file format. Please use TXT, PDF, or DOCX files.');
+        throw new Error('Unsupported file format detected during processing.');
       }
 
       // Clean and validate the extracted text
       extractedText = cleanExtractedText(extractedText);
 
       if (!extractedText || extractedText.length < 50) {
-        throw new Error('Could not extract readable text from the file. Please ensure your file contains text content.');
+        throw new Error('Could not extract readable text from the file. The file may be corrupted, password-protected, or contain only images.');
       }
 
-      // Clean up the temporary file
-      fs.unlinkSync(filePath);
+      // Validate content quality
+      if (!isValidResumeContent(extractedText)) {
+        throw new Error('The extracted content doesn\'t appear to be a resume. Please ensure your file contains resume text.');
+      }
 
       res.status(200).json({
         success: true,
         content: extractedText,
         fileName: fileName,
         fileType: mimeType,
-        length: extractedText.length
+        length: extractedText.length,
+        quality: assessContentQuality(extractedText)
       });
 
     } catch (extractionError) {
-      // Clean up the temporary file
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-      throw extractionError;
+      const jobMateError = handleError(extractionError, {
+        operation: 'file_extraction',
+        fileName,
+        fileType: mimeType,
+        fileSize
+      });
+
+      throw jobMateError;
     }
 
   } catch (error) {
     console.error('File processing error:', error);
-    res.status(500).json({
-      error: 'Failed to process file',
-      details: error.message
+    
+    const jobMateError = handleError(error, {
+      operation: 'file_processing'
     });
+
+    res.status(500).json({
+      error: jobMateError.message,
+      code: jobMateError.code,
+      suggestions: getSuggestionsForError(jobMateError.code),
+      supportedFormats: [
+        { format: 'TXT', description: 'Plain text (Recommended)', maxSize: '10MB' },
+        { format: 'DOCX', description: 'Microsoft Word (2007+)', maxSize: '10MB' },
+        { format: 'DOC', description: 'Microsoft Word (Legacy)', maxSize: '10MB' },
+        { format: 'PDF', description: 'PDF Document (Limited support)', maxSize: '10MB' }
+      ]
+    });
+  } finally {
+    // Clean up temporary file
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      try {
+        fs.unlinkSync(tempFilePath);
+      } catch (cleanupError) {
+        console.warn('Failed to clean up temporary file:', cleanupError);
+      }
+    }
   }
 }
 
-async function extractPDFTextSimple(filePath) {
-  // For now, we'll provide a fallback message for PDF files
-  // In a production environment, you'd want to use a proper PDF parsing library
-  throw new Error('PDF processing requires additional setup. Please convert your PDF to TXT format or use a DOCX file for now.');
+async function extractTextFile(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (!content || content.trim().length === 0) {
+      throw new Error('Text file is empty or contains no readable content.');
+    }
+    return content;
+  } catch (error) {
+    throw new Error('Failed to read text file: ' + error.message);
+  }
+}
+
+async function extractPDFText(filePath, fileName) {
+  // Enhanced PDF handling with better error messages
+  throw new Error(`PDF processing is currently limited. For best results, please:
+1. Save your PDF as a Word document (.docx)
+2. Copy the text and save as a .txt file
+3. Use our web interface to paste the content directly
+
+This ensures 100% accuracy in text extraction.`);
 }
 
 async function extractWordText(filePath) {
@@ -95,12 +159,23 @@ async function extractWordText(filePath) {
     const result = await mammoth.extractRawText({ path: filePath });
     
     if (!result.value || result.value.trim().length === 0) {
-      throw new Error('No text content found in Word document');
+      throw new Error('No text content found in Word document. The file may contain only images or be corrupted.');
+    }
+
+    // Check for extraction warnings
+    if (result.messages && result.messages.length > 0) {
+      console.warn('Word extraction warnings:', result.messages);
     }
 
     return result.value;
   } catch (error) {
-    throw new Error('Failed to extract text from Word document: ' + error.message);
+    if (error.message.includes('ENOENT')) {
+      throw new Error('Word document file not found or corrupted.');
+    } else if (error.message.includes('password')) {
+      throw new Error('Password-protected Word documents are not supported. Please remove password protection and try again.');
+    } else {
+      throw new Error('Failed to extract text from Word document. The file may be corrupted or in an unsupported format.');
+    }
   }
 }
 
@@ -117,5 +192,70 @@ function cleanExtractedText(text) {
     .replace(/\r/g, '\n')
     // Remove multiple consecutive line breaks
     .replace(/\n\s*\n\s*\n/g, '\n\n')
+    // Remove leading/trailing whitespace
     .trim();
+}
+
+function isValidResumeContent(text) {
+  const resumeIndicators = [
+    'experience', 'education', 'skills', 'work', 'employment',
+    'university', 'college', 'degree', 'certification', 'project',
+    'achievement', 'responsibility', 'objective', 'summary',
+    'contact', 'email', 'phone', 'address', 'linkedin'
+  ];
+
+  const lowerText = text.toLowerCase();
+  const foundIndicators = resumeIndicators.filter(indicator => 
+    lowerText.includes(indicator)
+  );
+
+  // Should have at least 3 resume indicators and reasonable length
+  return foundIndicators.length >= 3 && text.length >= 100;
+}
+
+function assessContentQuality(text) {
+  const wordCount = text.split(/\s+/).length;
+  const lineCount = text.split('\n').length;
+  
+  if (wordCount > 300 && lineCount > 10) {
+    return 'excellent';
+  } else if (wordCount > 150 && lineCount > 5) {
+    return 'good';
+  } else if (wordCount > 50) {
+    return 'fair';
+  } else {
+    return 'poor';
+  }
+}
+
+function getSuggestionsForError(errorCode) {
+  const suggestions = {
+    [ERROR_CODES.FILE_TOO_LARGE]: [
+      'Compress your file or convert to TXT format',
+      'Remove unnecessary images or formatting',
+      'Split large files into smaller sections'
+    ],
+    [ERROR_CODES.UNSUPPORTED_FORMAT]: [
+      'Convert your file to TXT, DOCX, or DOC format',
+      'Save as plain text for best compatibility',
+      'Ensure file extension matches content type'
+    ],
+    [ERROR_CODES.EXTRACTION_FAILED]: [
+      'Try saving your file as plain text (.txt)',
+      'Remove password protection if present',
+      'Ensure the file contains actual text content',
+      'Copy and paste content directly into our web interface'
+    ],
+    [ERROR_CODES.FILE_CORRUPTED]: [
+      'Try re-saving the file in the same format',
+      'Convert to a different supported format',
+      'Check if the original file opens correctly'
+    ]
+  };
+
+  return suggestions[errorCode] || [
+    'Try uploading a different file format',
+    'Ensure your file contains readable text',
+    'Contact support if the issue persists'
+  ];
 }

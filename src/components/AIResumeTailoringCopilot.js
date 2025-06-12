@@ -19,15 +19,19 @@ import {
   Upload,
   File,
   FileImage,
-  X
+  X,
+  Shield,
+  Clock
 } from 'lucide-react';
 import { Chip, Dialog, DialogContent } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabaseClient';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 import toast from 'react-hot-toast';
 
 const AIResumeTailoringCopilot = () => {
   const { user } = useUser();
+  const { executeWithErrorHandling, isLoading, error } = useErrorHandler();
   const [jobDescription, setJobDescription] = useState('');
   const [resumeContent, setResumeContent] = useState('');
   const [originalFileName, setOriginalFileName] = useState('');
@@ -36,12 +40,12 @@ const AIResumeTailoringCopilot = () => {
   const [matchScore, setMatchScore] = useState(0);
   const [keywords, setKeywords] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [showComparison, setShowComparison] = useState(false);
   const [toneStyle, setToneStyle] = useState('professional');
   const [uploadedFile, setUploadedFile] = useState(null);
   const [processingFile, setProcessingFile] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
 
   const toneOptions = [
     { value: 'professional', label: 'Professional', desc: 'Formal and corporate tone', gradient: 'from-blue-500 to-cyan-500' },
@@ -57,10 +61,24 @@ const AIResumeTailoringCopilot = () => {
     { ext: '.doc', type: 'application/msword', icon: FileImage, color: 'blue', desc: 'Legacy Word Document' }
   ];
 
+  // Network status monitoring
+  useEffect(() => {
+    const handleOnline = () => setNetworkStatus(true);
+    const handleOffline = () => setNetworkStatus(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const fetchLatestResume = useCallback(async () => {
     if (!user) return;
     
-    try {
+    await executeWithErrorHandling(async () => {
       const { data } = await supabase
         .from('resume_history')
         .select('*')
@@ -75,29 +93,21 @@ const AIResumeTailoringCopilot = () => {
           setOriginalFileName(resume.file_name || 'Previous Resume');
           setOriginalFileType('text/plain');
         } else if (resume.resume_url) {
-          try {
-            const response = await fetch(resume.resume_url);
-            const text = await response.text();
-            
-            if (isReadableText(text)) {
-              setResumeContent(text);
-              setOriginalFileName(resume.file_name || 'Previous Resume');
-              setOriginalFileType(resume.file_type || 'text/plain');
-            } else {
-              toast('Previous resume needs to be re-uploaded in a supported format.', {
-                icon: 'ℹ️',
-                duration: 4000,
-              });
-            }
-          } catch (err) {
-            console.error('Error fetching resume content:', err);
+          const response = await fetch(resume.resume_url);
+          const text = await response.text();
+          
+          if (isReadableText(text)) {
+            setResumeContent(text);
+            setOriginalFileName(resume.file_name || 'Previous Resume');
+            setOriginalFileType(resume.file_type || 'text/plain');
           }
         }
       }
-    } catch (error) {
-      console.error('Error fetching resume:', error);
-    }
-  }, [user]);
+    }, {
+      showToast: false,
+      context: { operation: 'fetch_resume' }
+    });
+  }, [user, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchLatestResume();
@@ -133,9 +143,8 @@ const AIResumeTailoringCopilot = () => {
 
   const processFile = async (file) => {
     setProcessingFile(true);
-    toast.loading('Processing your resume...', { id: 'process' });
 
-    try {
+    await executeWithErrorHandling(async () => {
       const formData = new FormData();
       formData.append('file', file);
 
@@ -151,31 +160,29 @@ const AIResumeTailoringCopilot = () => {
         setOriginalFileName(file.name);
         setOriginalFileType(file.type);
         setUploadedFile(file);
-        toast.success('✅ Resume processed successfully!', { id: 'process' });
-        return true;
+        return data;
       } else {
         throw new Error(data.error || 'Failed to process file');
       }
-    } catch (error) {
-      console.error('File processing error:', error);
-      toast.error(`Failed to process ${file.name}: ${error.message}`, { id: 'process' });
-      return false;
-    } finally {
-      setProcessingFile(false);
-    }
+    }, {
+      loadingMessage: 'Processing your resume...',
+      successMessage: '✅ Resume processed successfully!',
+      context: { operation: 'file_processing', fileName: file.name, fileSize: file.size }
+    });
+
+    setProcessingFile(false);
   };
 
   const handleResumeUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file size (max 10MB)
+    // Validation with better error messages
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
+      toast.error('File size must be less than 10MB. Try compressing your file or converting to TXT format.');
       return;
     }
 
-    // Check file type
     const supportedTypes = supportedFormats.map(f => f.type);
     if (!supportedTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|docx|doc)$/i)) {
       toast.error('Please upload a supported file format: TXT, PDF, DOC, or DOCX');
@@ -213,10 +220,14 @@ const AIResumeTailoringCopilot = () => {
       return;
     }
 
-    setLoading(true);
+    if (!networkStatus) {
+      toast.error('No internet connection. Please check your connection and try again.');
+      return;
+    }
+
     setStep(2);
 
-    try {
+    await executeWithErrorHandling(async () => {
       const response = await fetch('/api/analyze-job-description', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -230,16 +241,28 @@ const AIResumeTailoringCopilot = () => {
         setSuggestions(data.suggestions || []);
         setMatchScore(data.matchScore || 0);
         setStep(3);
-        toast.success('✨ Job analysis complete!');
+        
+        if (data.fallbackUsed) {
+          toast.success('✨ Job analysis complete using enhanced backup system!', {
+            duration: 5000,
+            icon: '🛡️'
+          });
+        } else {
+          toast.success('✨ Job analysis complete!');
+        }
+        
+        return data;
       } else {
         throw new Error(data.error || 'Analysis failed');
       }
-    } catch (error) {
-      console.error('Analysis error:', error);
-      toast.error('Failed to analyze job description');
+    }, {
+      loadingMessage: 'Analyzing job description with AI...',
+      retries: 2,
+      context: { operation: 'job_analysis', jobDescriptionLength: jobDescription.length }
+    });
+
+    if (error) {
       setStep(1);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -254,10 +277,14 @@ const AIResumeTailoringCopilot = () => {
       return;
     }
 
-    setLoading(true);
+    if (!networkStatus) {
+      toast.error('No internet connection. Please check your connection and try again.');
+      return;
+    }
+
     setStep(4);
 
-    try {
+    await executeWithErrorHandling(async () => {
       const response = await fetch('/api/generate-tailored-resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -276,26 +303,42 @@ const AIResumeTailoringCopilot = () => {
           setTailoredResume(data.tailoredResume);
           setMatchScore(data.newMatchScore || matchScore + 25);
           setStep(5);
-          toast.success('🎉 Resume tailored successfully!');
+          
+          if (data.fallbackUsed) {
+            toast.success('🎉 Resume tailored using enhanced backup system!', {
+              duration: 6000,
+              icon: '🛡️'
+            });
+          } else {
+            toast.success('🎉 Resume tailored successfully!');
+          }
+          
+          return data;
         } else {
           throw new Error('Generated resume is not in readable format');
         }
       } else {
         throw new Error(data.error || 'Tailoring failed');
       }
-    } catch (error) {
-      console.error('Tailoring error:', error);
-      toast.error('Failed to tailor resume. Please try again.');
+    }, {
+      loadingMessage: 'AI is crafting your perfect resume...',
+      retries: 2,
+      context: { 
+        operation: 'resume_tailoring',
+        resumeLength: resumeContent.length,
+        keywordCount: keywords.length
+      }
+    });
+
+    if (error) {
       setStep(3);
-    } finally {
-      setLoading(false);
     }
   };
 
   const saveToHistory = async () => {
     if (!tailoredResume || !user) return;
 
-    try {
+    await executeWithErrorHandling(async () => {
       const jobTitle = jobDescription.split('\n')[0].slice(0, 80) || 'AI Tailored Resume';
       
       const { error } = await supabase.from('resume_history').insert({
@@ -310,17 +353,16 @@ const AIResumeTailoringCopilot = () => {
       });
 
       if (error) throw error;
-      toast.success('✅ Saved to resume history!');
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error('Failed to save resume');
-    }
+    }, {
+      successMessage: '✅ Saved to resume history!',
+      context: { operation: 'save_resume' }
+    });
   };
 
   const downloadResume = async (format = 'txt') => {
     if (!tailoredResume) return;
 
-    try {
+    await executeWithErrorHandling(async () => {
       if (format === 'txt') {
         const blob = new Blob([tailoredResume], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
@@ -330,7 +372,6 @@ const AIResumeTailoringCopilot = () => {
         a.click();
         URL.revokeObjectURL(url);
       } else if (format === 'pdf') {
-        // Call API to convert to PDF
         const response = await fetch('/api/convert-to-pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -349,7 +390,6 @@ const AIResumeTailoringCopilot = () => {
           throw new Error('PDF conversion failed');
         }
       } else if (format === 'docx') {
-        // Call API to convert to DOCX
         const response = await fetch('/api/convert-to-docx', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -368,12 +408,10 @@ const AIResumeTailoringCopilot = () => {
           throw new Error('DOCX conversion failed');
         }
       }
-      
-      toast.success(`✅ Downloaded as ${format.toUpperCase()}!`);
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error(`Failed to download ${format.toUpperCase()} file`);
-    }
+    }, {
+      successMessage: `✅ Downloaded as ${format.toUpperCase()}!`,
+      context: { operation: 'download_resume', format }
+    });
   };
 
   const copyToClipboard = () => {
@@ -429,8 +467,24 @@ const AIResumeTailoringCopilot = () => {
     </div>
   );
 
+  // Network status indicator
+  const NetworkStatusIndicator = () => (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: networkStatus ? 0 : 1, y: networkStatus ? -20 : 0 }}
+      className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+    >
+      <div className="flex items-center gap-3">
+        <AlertCircle className="w-5 h-5" />
+        <span>No internet connection - some features may be limited</span>
+      </div>
+    </motion.div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto p-6 min-h-screen bg-gray-50">
+      <NetworkStatusIndicator />
+      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -447,6 +501,12 @@ const AIResumeTailoringCopilot = () => {
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Transform your resume with AI precision - supports TXT, PDF, and DOCX formats
         </p>
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Shield className="w-5 h-5 text-green-600" />
+          <span className="text-sm text-green-600 font-medium">
+            Enhanced error handling & backup systems active
+          </span>
+        </div>
       </motion.div>
 
       <StepIndicator currentStep={step} />
@@ -571,16 +631,21 @@ const AIResumeTailoringCopilot = () => {
           </div>
 
           <motion.button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={analyzeJobDescription}
-            disabled={!jobDescription.trim() || loading}
+            disabled={!jobDescription.trim() || isLoading || !networkStatus}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {loading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center gap-3">
                 <RefreshCw className="w-6 h-6 animate-spin" />
                 Analyzing with AI...
+              </div>
+            ) : !networkStatus ? (
+              <div className="flex items-center justify-center gap-3">
+                <AlertCircle className="w-6 h-6" />
+                No Internet Connection
               </div>
             ) : (
               <div className="flex items-center justify-center gap-3">
@@ -617,6 +682,10 @@ const AIResumeTailoringCopilot = () => {
               animate={{ width: '100%' }}
               transition={{ duration: 2 }}
             />
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <Shield className="w-4 h-4" />
+            <span>Backup systems ready if needed</span>
           </div>
         </motion.div>
       )}
@@ -711,16 +780,23 @@ const AIResumeTailoringCopilot = () => {
 
             <div className="flex gap-6 mt-12">
               <motion.button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={generateTailoredResume}
-                disabled={!resumeContent || loading}
+                disabled={!resumeContent || isLoading || !networkStatus}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="flex items-center justify-center gap-3">
-                  <Sparkles className="w-6 h-6" />
-                  Generate Tailored Resume
-                </div>
+                {!networkStatus ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <AlertCircle className="w-6 h-6" />
+                    No Internet Connection
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <Sparkles className="w-6 h-6" />
+                    Generate Tailored Resume
+                  </div>
+                )}
               </motion.button>
               
               <motion.button
@@ -771,13 +847,17 @@ const AIResumeTailoringCopilot = () => {
           <p className="text-gray-600 mb-8">
             AI is tailoring your resume with optimal keywords and formatting
           </p>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
             <motion.div 
               className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full"
               initial={{ width: 0 }}
               animate={{ width: '100%' }}
               transition={{ duration: 3 }}
             />
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <Shield className="w-4 h-4" />
+            <span>Enhanced backup processing available</span>
           </div>
         </motion.div>
       )}
