@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
-  Briefcase, 
+  Globe, 
   Zap, 
   BarChart3, 
   Brain, 
@@ -50,7 +50,7 @@ export default function HomePage() {
   const quickActions = [
     {
       title: 'AI Resume Tailoring',
-      description: 'Generate perfect resumes with AI precision',
+      description: 'Generate perfect resumes with OpenAI precision',
       icon: Sparkles,
       href: '/ai-tailoring',
       gradient: 'from-purple-500 to-pink-500',
@@ -58,12 +58,12 @@ export default function HomePage() {
       primary: true
     },
     {
-      title: 'Job Board',
-      description: 'Browse real jobs from top companies',
-      icon: Briefcase,
-      href: '/jobs',
+      title: 'Smart Job Scraper',
+      description: 'Extract job details from any platform',
+      icon: Globe,
+      href: '/scraper',
       gradient: 'from-green-500 to-teal-500',
-      stats: '8+ Companies'
+      stats: '23 Jobs Found'
     },
     {
       title: 'Smart Autofill',
@@ -214,7 +214,7 @@ export default function HomePage() {
           <div className="space-y-4">
             {[
               { action: 'Resume tailored for Software Engineer role', time: '2 minutes ago', status: 'success' },
-              { action: 'Job viewed from Google', time: '15 minutes ago', status: 'processing' },
+              { action: 'Job scraped from LinkedIn', time: '15 minutes ago', status: 'processing' },
               { action: 'Application form auto-filled', time: '1 hour ago', status: 'success' },
               { action: 'Profile optimization completed', time: '3 hours ago', status: 'success' }
             ].map((activity, index) => (
