@@ -1,10 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-);
+import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -26,21 +20,18 @@ export default async function handler(req, res) {
   try {
     console.log('Extension token request received');
     
-    // Get session from the request
-    const authHeader = req.headers.authorization;
-    let session = null;
+    // Initialize Supabase client for server-side operations
+    const supabase = createServerSupabaseClient({ req, res });
     
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      // If we have a bearer token, use it
-      const token = authHeader.substring(7);
-      const { data, error } = await supabase.auth.getUser(token);
-      if (!error && data.user) {
-        session = { user: data.user };
-      }
-    } else {
-      // Try to get session from cookies
-      const { data: { session: cookieSession }, error: sessionError } = await supabase.auth.getSession();
-      session = cookieSession;
+    // Get session from the request
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return res.status(401).json({
+        error: 'session_error',
+        description: 'Failed to retrieve session',
+      });
     }
 
     if (!session || !session.user) {
