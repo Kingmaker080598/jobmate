@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { 
   Home, 
   Sparkles, 
-  Globe, 
+  Briefcase, 
   Zap, 
   BarChart3, 
   User, 
@@ -48,7 +48,7 @@ export default function Navbar() {
   const navItems = [
     { href: '/home', icon: Home, label: 'Dashboard' },
     { href: '/ai-tailoring', icon: Sparkles, label: 'AI Tailoring' },
-    { href: '/scraper', icon: Globe, label: 'Job Scraper' },
+    { href: '/jobs', icon: Briefcase, label: 'Job Board' },
     { href: '/autofill', icon: Zap, label: 'Smart Autofill' },
     { href: '/applications', icon: BarChart3, label: 'Applications' },
     { href: '/profile', icon: User, label: 'Profile' },

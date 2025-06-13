@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
-  Globe, 
+  Briefcase, 
   Zap, 
   BarChart3, 
   Brain, 
@@ -58,12 +58,12 @@ export default function HomePage() {
       primary: true
     },
     {
-      title: 'Smart Job Scraper',
-      description: 'Extract job details from any platform',
-      icon: Globe,
-      href: '/scraper',
+      title: 'Job Board',
+      description: 'Browse real jobs from top companies',
+      icon: Briefcase,
+      href: '/jobs',
       gradient: 'from-green-500 to-teal-500',
-      stats: '23 Jobs Found'
+      stats: '8+ Companies'
     },
     {
       title: 'Smart Autofill',
@@ -214,7 +214,7 @@ export default function HomePage() {
           <div className="space-y-4">
             {[
               { action: 'Resume tailored for Software Engineer role', time: '2 minutes ago', status: 'success' },
-              { action: 'Job scraped from LinkedIn', time: '15 minutes ago', status: 'processing' },
+              { action: 'Job viewed from Google', time: '15 minutes ago', status: 'processing' },
               { action: 'Application form auto-filled', time: '1 hour ago', status: 'success' },
               { action: 'Profile optimization completed', time: '3 hours ago', status: 'success' }
             ].map((activity, index) => (

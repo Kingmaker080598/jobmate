@@ -1,12 +1,12 @@
 import Navbar from '@/components/Navbar';
 import RequireAuth from '@/components/RequireAuth';
-import WebScraperAssistant from '@/components/WebScraperAssistant';
+import JobBoard from '@/components/JobBoard';
 
-export default function ScraperPage() {
+export default function JobsPage() {
   return (
     <RequireAuth>
       <Navbar />
-      <WebScraperAssistant />
+      <JobBoard />
     </RequireAuth>
   );
 }

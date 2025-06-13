@@ -20,7 +20,8 @@ import {
   CheckCircle,
   AlertCircle,
   Shield,
-  Clock
+  Clock,
+  History
 } from 'lucide-react';
 import { Switch, FormControlLabel, Chip, TextField, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
@@ -57,16 +58,27 @@ const SmartAutofillEngine = () => {
     needs_sponsorship: false,
     willing_to_relocate: false,
     prefers_remote: false,
-    expected_salary: ''
+    expected_salary: '',
+    cover_letter_template: '',
+    skills: '',
+    certifications: '',
+    languages: '',
+    availability_date: '',
+    notice_period: '',
+    preferred_work_schedule: '',
+    travel_willingness: '',
+    security_clearance: '',
+    driver_license: false,
+    background_check_consent: false
   });
 
   const supportedPlatforms = [
     { name: 'LinkedIn', icon: Building, color: 'blue', pattern: 'linkedin.com', gradient: 'from-blue-500 to-cyan-500' },
     { name: 'Indeed', icon: Globe, color: 'green', pattern: 'indeed.com', gradient: 'from-green-500 to-teal-500' },
     { name: 'Glassdoor', icon: Building, color: 'purple', pattern: 'glassdoor.com', gradient: 'from-purple-500 to-pink-500' },
-    { name: 'Lever', icon: Target, color: 'orange', pattern: 'lever.co', gradient: 'from-orange-500 to-red-500' },
+    { name: 'Workday', icon: Briefcase, color: 'indigo', pattern: 'workday.com', gradient: 'from-indigo-500 to-purple-500' },
     { name: 'Greenhouse', icon: Target, color: 'emerald', pattern: 'greenhouse.io', gradient: 'from-emerald-500 to-teal-500' },
-    { name: 'Workday', icon: Briefcase, color: 'indigo', pattern: 'workday.com', gradient: 'from-indigo-500 to-purple-500' }
+    { name: 'Lever', icon: Target, color: 'orange', pattern: 'lever.co', gradient: 'from-orange-500 to-red-500' }
   ];
 
   const fetchProfile = useCallback(async () => {
@@ -149,12 +161,23 @@ const SmartAutofillEngine = () => {
         { id: 'location', label: 'Location', type: 'text', confidence: 85, value: formData?.location || '', icon: MapPin },
         { id: 'linkedin', label: 'LinkedIn Profile', type: 'url', confidence: 80, value: formData?.linkedin_url || '', icon: Building },
         { id: 'experience', label: 'Years of Experience', type: 'number', confidence: 75, value: formData?.years_of_experience || '', icon: Briefcase },
-        { id: 'coverLetter', label: 'Cover Letter', type: 'textarea', confidence: 70, value: '', icon: Target }
+        { id: 'coverLetter', label: 'Cover Letter', type: 'textarea', confidence: 70, value: formData?.cover_letter_template || '', icon: Target },
+        { id: 'salary', label: 'Expected Salary', type: 'text', confidence: 85, value: formData?.expected_salary || '', icon: Target },
+        { id: 'workAuth', label: 'Work Authorization', type: 'select', confidence: 90, value: formData?.work_auth_status || '', icon: Shield },
+        { id: 'sponsorship', label: 'Visa Sponsorship', type: 'select', confidence: 88, value: formData?.needs_sponsorship ? 'Yes' : 'No', icon: Shield },
+        { id: 'relocate', label: 'Willing to Relocate', type: 'select', confidence: 82, value: formData?.willing_to_relocate ? 'Yes' : 'No', icon: MapPin },
+        { id: 'remote', label: 'Remote Work Preference', type: 'select', confidence: 80, value: formData?.prefers_remote ? 'Yes' : 'No', icon: Globe },
+        { id: 'availability', label: 'Availability Date', type: 'date', confidence: 78, value: formData?.availability_date || '', icon: Clock },
+        { id: 'education', label: 'Education', type: 'text', confidence: 85, value: formData?.education || '', icon: Target },
+        { id: 'skills', label: 'Skills', type: 'textarea', confidence: 88, value: formData?.skills || '', icon: Brain },
+        { id: 'gender', label: 'Gender', type: 'select', confidence: 75, value: formData?.gender || '', icon: User },
+        { id: 'veteran', label: 'Veteran Status', type: 'select', confidence: 70, value: formData?.veteran_status || '', icon: Shield },
+        { id: 'disability', label: 'Disability Status', type: 'select', confidence: 68, value: formData?.disability_status || '', icon: Shield }
       ];
       
       setDetectedFields(mockFields);
-      setPlatformDetected('LinkedIn');
-      setCurrentUrl('https://linkedin.com/jobs/apply/123456');
+      setPlatformDetected('Demo Application Form');
+      setCurrentUrl('https://demo-application-form.com');
       toast.success('✅ Demo form analyzed! Found ' + mockFields.length + ' fillable fields');
     } catch (error) {
       toast.error('Failed to analyze page');
@@ -431,10 +454,104 @@ const SmartAutofillEngine = () => {
               />
             </div>
 
-            {/* Work Authorization & Preferences */}
+            {/* Additional Fields for Job Applications */}
+            {isEditing && (
+              <>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills & Qualifications</h3>
+                  
+                  <TextField
+                    label="Skills (comma-separated)"
+                    value={formData.skills}
+                    onChange={(e) => setFormData(prev => ({ ...prev, skills: e.target.value }))}
+                    fullWidth
+                    multiline
+                    rows={3}
+                    placeholder="JavaScript, React, Node.js, Python..."
+                  />
+                  
+                  <TextField
+                    label="Certifications"
+                    value={formData.certifications}
+                    onChange={(e) => setFormData(prev => ({ ...prev, certifications: e.target.value }))}
+                    fullWidth
+                    placeholder="AWS Certified, Google Cloud Professional..."
+                  />
+                  
+                  <TextField
+                    label="Languages"
+                    value={formData.languages}
+                    onChange={(e) => setFormData(prev => ({ ...prev, languages: e.target.value }))}
+                    fullWidth
+                    placeholder="English (Native), Spanish (Fluent)..."
+                  />
+                  
+                  <TextField
+                    label="Security Clearance"
+                    value={formData.security_clearance}
+                    onChange={(e) => setFormData(prev => ({ ...prev, security_clearance: e.target.value }))}
+                    fullWidth
+                    placeholder="Secret, Top Secret, None..."
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Availability & Preferences</h3>
+                  
+                  <TextField
+                    label="Availability Date"
+                    type="date"
+                    value={formData.availability_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, availability_date: e.target.value }))}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  
+                  <TextField
+                    label="Notice Period"
+                    value={formData.notice_period}
+                    onChange={(e) => setFormData(prev => ({ ...prev, notice_period: e.target.value }))}
+                    fullWidth
+                    placeholder="2 weeks, 1 month, Immediate..."
+                  />
+                  
+                  <FormControl fullWidth>
+                    <InputLabel>Preferred Work Schedule</InputLabel>
+                    <Select
+                      value={formData.preferred_work_schedule}
+                      onChange={(e) => setFormData(prev => ({ ...prev, preferred_work_schedule: e.target.value }))}
+                      label="Preferred Work Schedule"
+                    >
+                      <MenuItem value="">No preference</MenuItem>
+                      <MenuItem value="Full-time">Full-time</MenuItem>
+                      <MenuItem value="Part-time">Part-time</MenuItem>
+                      <MenuItem value="Contract">Contract</MenuItem>
+                      <MenuItem value="Flexible">Flexible</MenuItem>
+                    </Select>
+                  </FormControl>
+                  
+                  <FormControl fullWidth>
+                    <InputLabel>Travel Willingness</InputLabel>
+                    <Select
+                      value={formData.travel_willingness}
+                      onChange={(e) => setFormData(prev => ({ ...prev, travel_willingness: e.target.value }))}
+                      label="Travel Willingness"
+                    >
+                      <MenuItem value="">No preference</MenuItem>
+                      <MenuItem value="No travel">No travel</MenuItem>
+                      <MenuItem value="Minimal travel (0-25%)">Minimal travel (0-25%)</MenuItem>
+                      <MenuItem value="Some travel (25-50%)">Some travel (25-50%)</MenuItem>
+                      <MenuItem value="Frequent travel (50%+)">Frequent travel (50%+)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              </>
+            )}
+
+            {/* Work Authorization & Legal Information */}
             {isEditing && (
               <div className="md:col-span-2 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Work Authorization & Preferences</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Work Authorization & Legal Information</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormControl fullWidth>
@@ -465,6 +582,51 @@ const SmartAutofillEngine = () => {
                       <MenuItem value="Other">Other</MenuItem>
                     </Select>
                   </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Veteran Status</InputLabel>
+                    <Select
+                      value={formData.veteran_status}
+                      onChange={(e) => setFormData(prev => ({ ...prev, veteran_status: e.target.value }))}
+                      label="Veteran Status"
+                    >
+                      <MenuItem value="">Prefer not to say</MenuItem>
+                      <MenuItem value="Not a veteran">Not a veteran</MenuItem>
+                      <MenuItem value="Veteran">Veteran</MenuItem>
+                      <MenuItem value="Disabled veteran">Disabled veteran</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Disability Status</InputLabel>
+                    <Select
+                      value={formData.disability_status}
+                      onChange={(e) => setFormData(prev => ({ ...prev, disability_status: e.target.value }))}
+                      label="Disability Status"
+                    >
+                      <MenuItem value="">Prefer not to say</MenuItem>
+                      <MenuItem value="No disability">No disability</MenuItem>
+                      <MenuItem value="Has disability">Has disability</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextField
+                    label="Pronouns"
+                    value={formData.pronouns}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pronouns: e.target.value }))}
+                    fullWidth
+                    placeholder="he/him, she/her, they/them..."
+                  />
+                  
+                  <TextField
+                    label="Race/Ethnicity (Optional)"
+                    value={formData.race_ethnicity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, race_ethnicity: e.target.value }))}
+                    fullWidth
+                    placeholder="Optional demographic information"
+                  />
                 </div>
 
                 <div className="flex flex-wrap gap-4">
@@ -495,7 +657,35 @@ const SmartAutofillEngine = () => {
                     }
                     label="Needs visa sponsorship"
                   />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.driver_license}
+                        onChange={(e) => setFormData(prev => ({ ...prev, driver_license: e.target.checked }))}
+                      />
+                    }
+                    label="Has valid driver's license"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.background_check_consent}
+                        onChange={(e) => setFormData(prev => ({ ...prev, background_check_consent: e.target.checked }))}
+                      />
+                    }
+                    label="Consent to background check"
+                  />
                 </div>
+
+                <TextField
+                  label="Cover Letter Template"
+                  value={formData.cover_letter_template}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cover_letter_template: e.target.value }))}
+                  fullWidth
+                  multiline
+                  rows={4}
+                  placeholder="Dear Hiring Manager, I am writing to express my interest in..."
+                />
               </div>
             )}
 
