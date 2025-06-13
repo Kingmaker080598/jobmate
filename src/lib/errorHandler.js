@@ -21,6 +21,7 @@ export const ERROR_CODES = {
   FILE_CORRUPTED: 'FILE_CORRUPTED',
   EXTRACTION_FAILED: 'EXTRACTION_FAILED',
   PDF_PROCESSING_LIMITED: 'PDF_PROCESSING_LIMITED',
+  DOCX_PROCESSING_ERROR: 'DOCX_PROCESSING_ERROR',
   
   // Database Errors
   DB_CONNECTION_ERROR: 'DB_CONNECTION_ERROR',
@@ -70,6 +71,12 @@ export const ERROR_MESSAGES = {
     action: 'Try converting to DOCX/TXT or paste content directly.',
     severity: 'warning'
   },
+  [ERROR_CODES.DOCX_PROCESSING_ERROR]: {
+    title: 'Word Document Processing Issue',
+    message: 'We encountered an issue processing your Word document. This may be due to file corruption, password protection, or unsupported formatting.',
+    action: 'Try re-saving the file or converting to TXT format.',
+    severity: 'error'
+  },
   [ERROR_CODES.EXTRACTION_FAILED]: {
     title: 'Content Extraction Issue',
     message: 'We couldn\'t extract text from your file. This might be due to formatting or encryption.',
@@ -112,9 +119,18 @@ export function handleError(error, context = {}) {
     errorCode = ERROR_CODES.FILE_TOO_LARGE;
   } else if (error.message.includes('Unsupported') || error.message.includes('format')) {
     errorCode = ERROR_CODES.UNSUPPORTED_FORMAT;
+  } else if (error.message.includes('Word document') && 
+             (error.message.includes('corrupted') || 
+              error.message.includes('password') || 
+              error.message.includes('not a valid zip'))) {
+    errorCode = ERROR_CODES.DOCX_PROCESSING_ERROR;
+  } else if (error.message.includes('PDF document') && 
+             (error.message.includes('corrupted') || 
+              error.message.includes('password') || 
+              error.message.includes('Invalid PDF'))) {
+    errorCode = ERROR_CODES.PDF_PROCESSING_LIMITED;
   } else if (error.message.includes('No readable resume content available') || 
-             (error.message.includes('extract') && context.operation === 'resume_tailoring') ||
-             (error.message.includes('readable') && context.fileType === 'pdf')) {
+             (error.message.includes('extract') && context.operation === 'resume_tailoring')) {
     errorCode = ERROR_CODES.PDF_PROCESSING_LIMITED;
   } else if (error.message.includes('extract') || error.message.includes('readable')) {
     errorCode = ERROR_CODES.EXTRACTION_FAILED;

@@ -71,7 +71,7 @@ export default async function handler(req, res) {
         fileName.toLowerCase().endsWith('.docx') ||
         fileName.toLowerCase().endsWith('.doc')
       ) {
-        extractedText = await extractWordText(tempFilePath);
+        extractedText = await extractWordText(tempFilePath, fileName);
       } else {
         throw new Error('Unsupported file format detected during processing.');
       }
@@ -212,7 +212,7 @@ async function extractPDFText(filePath, fileName) {
   }
 }
 
-async function extractWordText(filePath) {
+async function extractWordText(filePath, fileName) {
   try {
     console.log('Extracting text from Word document:', filePath);
     
@@ -225,7 +225,7 @@ async function extractWordText(filePath) {
     });
     
     if (!result.value || result.value.trim().length === 0) {
-      throw new Error('No text content found in Word document. The file may contain only images, be corrupted, or be password-protected.');
+      throw new Error(`No text content found in Word document "${fileName}". The file may contain only images, be corrupted, or be password-protected.`);
     }
 
     // Check for extraction warnings
@@ -240,13 +240,13 @@ async function extractWordText(filePath) {
     console.error('Word extraction error:', error);
     
     if (error.message.includes('ENOENT')) {
-      throw new Error('Word document file not found or corrupted.');
+      throw new Error(`Word document "${fileName}" file not found or corrupted.`);
     } else if (error.message.includes('password')) {
-      throw new Error('Password-protected Word documents are not supported. Please remove password protection and try again.');
+      throw new Error(`Password-protected Word document "${fileName}" is not supported. Please remove password protection and try again.`);
     } else if (error.message.includes('not a valid zip file')) {
-      throw new Error('The Word document appears to be corrupted. Please try saving it again or converting to TXT format.');
+      throw new Error(`The Word document "${fileName}" appears to be corrupted. Please try saving it again or converting to TXT format.`);
     } else {
-      throw new Error('Failed to extract text from Word document. The file may be corrupted, in an unsupported format, or contain only images. Try converting to TXT format.');
+      throw new Error(`Failed to extract text from Word document "${fileName}". The file may be corrupted, in an unsupported format, or contain only images. Try converting to TXT format.`);
     }
   }
 }
