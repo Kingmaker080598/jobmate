@@ -26,12 +26,21 @@ export default async function handler(req, res) {
   try {
     console.log('Extension token request received');
     
-    // Get session from cookies/headers
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error('Session error:', sessionError);
-      return res.status(500).json({ error: 'Session validation failed' });
+    // Get session from the request
+    const authHeader = req.headers.authorization;
+    let session = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // If we have a bearer token, use it
+      const token = authHeader.substring(7);
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data.user) {
+        session = { user: data.user };
+      }
+    } else {
+      // Try to get session from cookies
+      const { data: { session: cookieSession }, error: sessionError } = await supabase.auth.getSession();
+      session = cookieSession;
     }
 
     if (!session || !session.user) {

@@ -5,22 +5,26 @@ let authToken = null;
 
 document.getElementById('startButton').addEventListener('click', () => {
   chrome.tabs.create({
-    url: 'https://jobmate-beta.vercel.app/login'
+    url: 'https://jobmate-beta.vercel.app/login?extension=true'
   });
 });
 
 async function checkAuthStatus() {
   try {
+    console.log('Checking authentication status...');
+    
     // First check local storage
     const result = await chrome.storage.local.get(['isAuthenticated', 'authToken']);
     isAuthenticated = result.isAuthenticated || false;
     authToken = result.authToken || null;
     
-    console.log('Auth status from storage:', isAuthenticated, 'Token length:', authToken?.length);
+    console.log('Auth status from storage:', isAuthenticated, 'Token present:', !!authToken);
     
     // If authenticated from storage, validate the token
     if (isAuthenticated && authToken) {
       try {
+        console.log('Validating stored token...');
+        
         // Test the token by making a profile request
         const response = await fetch(`https://jobmate-beta.vercel.app/api/profile?token=${encodeURIComponent(authToken)}`, {
           headers: {
@@ -28,6 +32,8 @@ async function checkAuthStatus() {
             'Cache-Control': 'no-cache'
           }
         });
+        
+        console.log('Token validation response:', response.status);
         
         if (response.ok) {
           console.log('Token is valid');
@@ -64,6 +70,7 @@ async function checkAuthStatus() {
       }
       
       if (response && response.isAuthenticated && response.authToken) {
+        console.log('Background script has valid auth');
         isAuthenticated = true;
         authToken = response.authToken;
         chrome.storage.local.set({ 
@@ -72,6 +79,7 @@ async function checkAuthStatus() {
         });
         updateButtonVisibility();
       } else {
+        console.log('No valid auth from background script');
         isAuthenticated = false;
         authToken = null;
         updateButtonVisibility();
@@ -115,6 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Listen for auth status changes
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Popup received message:', message.type);
+  
   if (message.type === 'AUTH_STATUS_CHANGED') {
     console.log('Received auth status change message');
     checkAuthStatus();
@@ -232,6 +242,8 @@ document.getElementById('autoFillButton').addEventListener('click', async () => 
       alert('❌ Auto-fill timed out. Please make sure you are on an application page and try again.');
     } else if (error.message.includes('Could not establish connection')) {
       alert('❌ Failed to connect to page. Please refresh the page and try again.');
+    } else if (error.message.includes('Failed to fetch')) {
+      alert('❌ Connection error. Please check your internet connection and try again.');
     } else {
       alert('❌ Auto-fill failed. Please try refreshing the page and signing in again if needed.');
     }
@@ -241,6 +253,8 @@ document.getElementById('autoFillButton').addEventListener('click', async () => 
 // Add logout handling
 document.getElementById('logoutButton').addEventListener('click', async () => {
   try {
+    console.log('Logout button clicked');
+    
     // Clear local storage
     await chrome.storage.local.set({ 
       isAuthenticated: false,

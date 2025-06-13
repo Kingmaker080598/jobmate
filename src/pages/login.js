@@ -21,27 +21,46 @@ export default function AuthPage() {
     try {
       if (!user) return;
       
-      const tokenData = {
-        userId: user.id,
-        exp: Date.now() + (24 * 60 * 60 * 1000)
-      };
+      console.log('Generating extension token for user:', user.id);
       
-      const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
-      localStorage.setItem('jobmate_extension_token', token);
+      // Generate token from the API
+      const response = await fetch('/api/extension-token', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
       
-      if (typeof window !== 'undefined') {
-        const isExtension = document.referrer.includes('chrome-extension://');
+      if (response.ok) {
+        const data = await response.json();
+        const token = data.token;
         
-        if (isExtension) {
+        console.log('Token generated successfully, storing in localStorage');
+        localStorage.setItem('jobmate_extension_token', token);
+        
+        // Post message to window for extension detection
+        if (typeof window !== 'undefined') {
           window.postMessage({ 
             type: 'JOBMATE_LOGIN_SUCCESS', 
             token: token 
-          }, '*');
+          }, window.location.origin);
           
-          setTimeout(() => {
-            window.close();
-          }, 1000);
+          console.log('Posted login success message to window');
+          
+          // Check if this is an extension context
+          const isExtension = document.referrer.includes('chrome-extension://') || 
+                             window.location.search.includes('extension=true');
+          
+          if (isExtension) {
+            console.log('Extension context detected, will close window after delay');
+            setTimeout(() => {
+              window.close();
+            }, 1000);
+          }
         }
+      } else {
+        console.error('Failed to generate extension token:', response.status);
       }
     } catch (error) {
       console.error('Extension login error:', error);
@@ -49,24 +68,35 @@ export default function AuthPage() {
   }, [user]);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.id);
+      
       if (session?.user) {
         setUser(session.user);
+        
+        // If user just signed in, redirect to home
+        if (event === 'SIGNED_IN') {
+          console.log('User signed in, redirecting to home');
+          router.push('/home');
+        }
       } else {
         setUser(null);
       }
     });
 
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        console.log('Existing session found:', session.user.id);
         setUser(session.user);
+        // Don't auto-redirect here, let the auth state change handle it
       }
     });
 
     return () => {
       authListener?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (user) {
@@ -78,16 +108,31 @@ export default function AuthPage() {
     setName('');
     setEmail('');
     setPassword('');
+    setError('');
   };
 
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) setError(error.message);
+    try {
+      setError('');
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) {
+        console.error('Google login error:', error);
+        setError(error.message);
+      }
+    } catch (error) {
+      console.error('Google login exception:', error);
+      setError('Failed to sign in with Google. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAuth = async () => {
@@ -99,33 +144,65 @@ export default function AuthPage() {
       return setError('Please fill in all required fields');
     }
 
-    if (mode === 'signup') {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+    try {
+      if (mode === 'signup') {
+        console.log('Attempting signup for:', email);
+        
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            }
+          }
+        });
 
+        if (signUpError) {
+          console.error('Signup error:', signUpError);
+          throw signUpError;
+        }
+
+        console.log('Signup successful:', data);
+        alert('🎉 Account created! Please check your email to confirm your address.');
+        resetFields();
+        setMode('login');
+        return;
+      } else {
+        console.log('Attempting login for:', email);
+        
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (loginError) {
+          console.error('Login error:', loginError);
+          throw loginError;
+        }
+
+        console.log('Login successful:', data);
+        resetFields();
+        // Don't manually redirect here, let the auth state change handle it
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      
+      // Provide user-friendly error messages
+      if (error.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (error.message.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.');
+      } else if (error.message.includes('Too many requests')) {
+        setError('Too many login attempts. Please wait a moment and try again.');
+      } else if (error.message.includes('Failed to fetch')) {
+        setError('Connection error. Please check your internet connection and try again.');
+      } else {
+        setError(error.message || 'An unexpected error occurred. Please try again.');
+      }
+    } finally {
       setLoading(false);
-
-      if (signUpError) return setError(signUpError.message);
-
-      alert('🎉 Account created! Please check your email to confirm your address.');
-      resetFields();
-      setMode('login');
-      return;
     }
-
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setLoading(false);
-
-    if (loginError) return setError(loginError.message);
-
-    resetFields();
-    router.push('/home');
   };
 
   return (
@@ -138,21 +215,23 @@ export default function AuthPage() {
       >
         <div className="text-center mb-8">
           <motion.div
-            className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center"
+            className="w-16 h-16 mx-auto mb-6 flex items-center justify-center"
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           >
-            {mode === 'login' ? (
-              <LockKeyhole className="w-8 h-8 text-white" />
-            ) : (
-              <UserPlus2 className="w-8 h-8 text-white" />
-            )}
+            <Image
+              src="/favicon-32x32.png"
+              alt="JobMate Logo"
+              width={64}
+              height={64}
+              className="rounded-lg"
+            />
           </motion.div>
           
-          <h1 className="text-3xl font-bold text-gray-900 cyber-heading mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {mode === 'login' ? 'Welcome Back' : 'Join JobMate'}
           </h1>
-          <p className="text-gray-600 elegant-text">
+          <p className="text-gray-600">
             {mode === 'login' ? 'Sign in to your account' : 'Create your AI-powered profile'}
           </p>
         </div>
@@ -166,6 +245,7 @@ export default function AuthPage() {
                 className="cyber-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={loading}
               />
             </div>
           )}
@@ -177,6 +257,7 @@ export default function AuthPage() {
               className="cyber-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
             />
           </div>
           
@@ -187,11 +268,13 @@ export default function AuthPage() {
               className="cyber-input pr-12"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
             <button
               type="button"
               className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={loading}
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -221,7 +304,7 @@ export default function AuthPage() {
             {loading ? (
               <div className="flex items-center justify-center gap-3">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Processing...
+                {mode === 'login' ? 'Signing In...' : 'Creating Account...'}
               </div>
             ) : (
               mode === 'login' ? 'Sign In' : 'Create Account'
@@ -238,10 +321,11 @@ export default function AuthPage() {
           </div>
 
           <motion.button
-            className="w-full py-4 border border-gray-300 hover:border-blue-500 bg-white hover:bg-blue-50 transition-colors flex items-center justify-center gap-3 rounded-lg"
+            className="w-full py-4 border border-gray-300 hover:border-blue-500 bg-white hover:bg-blue-50 transition-colors flex items-center justify-center gap-3 rounded-lg disabled:opacity-50"
             onClick={handleGoogleLogin}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            disabled={loading}
           >
             <Image
               src="/google_logo.png"
@@ -253,11 +337,15 @@ export default function AuthPage() {
           </motion.button>
 
           <div className="text-center pt-6">
-            <p className="text-gray-600 elegant-text">
+            <p className="text-gray-600">
               {mode === 'login' ? 'New to JobMate?' : 'Already have an account?'}{' '}
               <button
-                onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                onClick={() => {
+                  setMode(mode === 'login' ? 'signup' : 'login');
+                  resetFields();
+                }}
                 className="text-blue-600 hover:text-blue-700 transition-colors font-semibold"
+                disabled={loading}
               >
                 {mode === 'login' ? 'Create Account' : 'Sign In'}
               </button>

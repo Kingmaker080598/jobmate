@@ -52,6 +52,8 @@ async function generateTokenFromSession() {
       }
     });
     
+    console.log('Extension token API response:', response.status);
+    
     if (response.ok) {
       const data = await response.json();
       if (data.token) {
@@ -61,7 +63,7 @@ async function generateTokenFromSession() {
         return data.token;
       }
     } else {
-      console.log('Token generation failed:', response.status);
+      console.log('Token generation failed:', response.status, await response.text());
     }
   } catch (error) {
     console.log('Error generating token from session:', error);
@@ -84,7 +86,10 @@ function checkAuthenticationStatus() {
     () => document.querySelector('[class*="dashboard"]'),
     () => window.location.pathname.includes('/home'),
     () => window.location.pathname.includes('/dashboard'),
-    () => window.location.pathname.includes('/profile')
+    () => window.location.pathname.includes('/profile'),
+    () => document.body.textContent.includes('Welcome back'),
+    () => document.body.textContent.includes('Dashboard'),
+    () => document.querySelector('nav') && document.querySelector('nav').textContent.includes('Logout')
   ];
   
   return authIndicators.some(check => {
@@ -121,7 +126,7 @@ async function detectAndReportAuth() {
         if (chrome.runtime.lastError) {
           console.error('Error sending login success message:', chrome.runtime.lastError);
         } else {
-          console.log('Login success message sent successfully');
+          console.log('Login success message sent successfully:', response);
         }
       });
     } catch (error) {
@@ -147,6 +152,12 @@ window.addEventListener('message', (event) => {
     chrome.runtime.sendMessage({
       type: 'LOGIN_SUCCESS',
       token: event.data.token
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error sending login success message:', chrome.runtime.lastError);
+      } else {
+        console.log('Login success message sent from window message:', response);
+      }
     });
   }
 });
@@ -175,12 +186,14 @@ const observer = new MutationObserver((mutations) => {
 });
 
 // Start observing
-observer.observe(document.body, {
-  childList: true,
-  subtree: true,
-  attributes: true,
-  attributeFilter: ['class', 'data-testid']
-});
+if (document.body) {
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'data-testid']
+  });
+}
 
 // Clean up observer when page unloads
 window.addEventListener('beforeunload', () => {

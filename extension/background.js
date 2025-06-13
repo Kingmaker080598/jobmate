@@ -8,7 +8,7 @@ let authToken = null;
 chrome.storage.local.get(['isAuthenticated', 'authToken'], (result) => {
   isAuthenticated = result.isAuthenticated || false;
   authToken = result.authToken || null;
-  console.log('Background script initialized. Auth state:', isAuthenticated);
+  console.log('Background script initialized. Auth state:', isAuthenticated, 'Token present:', !!authToken);
 });
 
 // Listen for messages from content scripts and popup
@@ -16,6 +16,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('Background received message:', message.type);
   
   if (message.type === 'CHECK_AUTH') {
+    console.log('Responding to auth check with:', { isAuthenticated, hasToken: !!authToken });
     sendResponse({ 
       isAuthenticated: isAuthenticated,
       authToken: authToken
@@ -52,6 +53,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
     return true;
   }
+  
+  if (message.type === 'LOGOUT') {
+    console.log('Received logout request');
+    
+    // Clear auth state
+    isAuthenticated = false;
+    authToken = null;
+    
+    // Clear storage
+    chrome.storage.local.set({
+      isAuthenticated: false,
+      authToken: null
+    }, () => {
+      console.log('Auth state cleared from storage');
+    });
+    
+    // Notify popup about auth status change
+    try {
+      chrome.runtime.sendMessage({
+        type: 'AUTH_STATUS_CHANGED',
+        isAuthenticated: false,
+        authToken: null
+      });
+    } catch (error) {
+      console.log('Could not notify popup (popup may be closed):', error);
+    }
+    
+    sendResponse({ success: true });
+    return true;
+  }
 });
 
 // Listen for tab updates to detect login success
@@ -72,4 +103,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Handle extension installation
 chrome.runtime.onInstalled.addListener(() => {
   console.log('JobMate extension installed');
+});
+
+// Handle extension startup
+chrome.runtime.onStartup.addListener(() => {
+  console.log('JobMate extension started');
 });
