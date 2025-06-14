@@ -7,6 +7,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (!openai) {
+    return res.status(500).json({
+      error: 'OpenAI API key not configured on server',
+    });
+  }
+
   const { resumeContent, jobDescription, toneStyle = 'professional', keywords = [] } = req.body;
 
   if (!jobDescription) {
